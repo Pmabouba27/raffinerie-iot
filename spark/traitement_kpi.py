@@ -1,12 +1,19 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, window, avg, expr, to_timestamp
-from pyspark.sql.types import StructType, StringType, FloatType
+from pyspark.sql.types import StructType, StringType, FloatType, IntegerType
 
 # 1. Définir le schéma attendu pour les messages JSON
+# Compatible avec le simulateur réaliste (6 types de capteurs)
 schema = StructType() \
-    .add("machine_id", StringType()) \
-    .add("valeur", FloatType()) \
-    .add("timestamp", StringType()) \
+    .add("capteur_id", IntegerType()) \
+    .add("identifiant", StringType()) \
+    .add("machine_id",  StringType()) \
+    .add("zone",        StringType()) \
+    .add("valeur",      FloatType())  \
+    .add("unite",       StringType()) \
+    .add("qualite",     StringType()) \
+    .add("mode",        StringType()) \
+    .add("timestamp",   StringType()) \
     .add("type_capteur", StringType())
 
 # 2. Démarrer la session Spark
@@ -46,10 +53,15 @@ json_df.writeStream \
     .outputMode("append") \
     .start()
 
-# 7. Filtrer les données valides
+# 7. Filtrer les données valides — 6 types de capteurs de la raffinerie
+# Plages physiques réelles définies dans le simulateur réaliste
 filtrees = json_df.filter(
-    ((col("type_capteur") == "temperature") & (col("valeur").between(30, 150))) |
-    ((col("type_capteur") == "vibration") & (col("valeur").between(0, 5)))
+    ((col("type_capteur") == "Température")  & (col("valeur").between(0, 500)))   |
+    ((col("type_capteur") == "Pression")     & (col("valeur").between(0, 100)))   |
+    ((col("type_capteur") == "Débit")        & (col("valeur").between(0, 5000)))  |
+    ((col("type_capteur") == "Vibration")    & (col("valeur").between(0, 50)))    |
+    ((col("type_capteur") == "Niveau")       & (col("valeur").between(0, 100)))   |
+    ((col("type_capteur") == "H2S gazeux")   & (col("valeur").between(0, 1000)))
 )
 
 # 8. Fonction batch pour enregistrer les mesures filtrées dans TimescaleDB
@@ -78,7 +90,17 @@ kpi = filtrees.withColumn("ts", col("timestamp")) \
     .groupBy(window("ts", "1 minute"), "type_capteur") \
     .agg(avg("valeur").alias("valeur")) \
     .withColumn("type_kpi", col("type_capteur")) \
-    .withColumn("unite", expr("CASE WHEN type_capteur = 'temperature' THEN '°C' ELSE 'mm/s' END")) \
+    .withColumn("unite", expr("""
+        CASE type_capteur
+            WHEN 'Température' THEN '°C'
+            WHEN 'Pression'    THEN 'bar'
+            WHEN 'Débit'       THEN 'm³/h'
+            WHEN 'Vibration'   THEN 'mm/s'
+            WHEN 'Niveau'      THEN '%'
+            WHEN 'H2S gazeux'  THEN 'ppm'
+            ELSE 'N/A'
+        END
+    """)) \
     .selectExpr("window.start as timestamp", "type_kpi", "valeur", "unite")
 
 # 11. Fonction batch pour enregistrer les KPI dans TimescaleDB

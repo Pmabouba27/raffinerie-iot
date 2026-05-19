@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — RaffineryWatch{% endblock %}
+{% block page_title %}<i class="bi bi-speedometer2 me-2" style="color:var(--green)"></i>Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 1100px) { .chart-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 700px)  { .chart-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .chart-header {
+    padding: .55rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: .78rem;
+    font-weight: 600;
+  }
+  .chart-header .ch-title { color: var(--text); display: flex; align-items: center; gap: .4rem; }
+  .chart-header .ch-val   { font-size: 1rem; font-weight: 800; }
+  .chart-body { padding: .5rem .75rem; height: 130px; position: relative; }
+  .chart-body canvas { max-height: 100% !important; }
+
+  .no-data-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    font-size: .8rem;
+    flex-direction: column;
+    gap: .3rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── KPIs ─────────────────────────────────────────────────── -->
+<div class="kpi-grid mb-4">
+  <div class="kpi-box">
+    <div class="kpi-label"><i class="bi bi-broadcast me-1"></i>Capteurs actifs</div>
+    <div class="kpi-value">{{ kpis.capteurs_actifs|default:"—" }}</div>
+    <div class="kpi-sub">sur {{ kpis.total_capteurs|default:"?" }} total</div>
+  </div>
+  <div class="kpi-box kpi-red">
+    <div class="kpi-label" style="color:#ef4444"><i class="bi bi-bell-fill me-1"></i>Alertes ouvertes</div>
+    <div class="kpi-value">{{ alertes|length }}</div>
+    <div class="kpi-sub"><a href="{% url 'alertes' %}" style="color:#f97316">Voir toutes →</a></div>
+  </div>
+  <div class="kpi-box kpi-blue">
+    <div class="kpi-label"><i class="bi bi-database me-1"></i>Mesures / 5 min</div>
+    <div class="kpi-value" style="color:#5b9bd5">{{ kpis.mesures_recentes|default:"—" }}</div>
+    <div class="kpi-sub">TimescaleDB</div>
+  </div>
+  <div class="kpi-box {% if sim_running %}{% else %}kpi-gray{% endif %}">
+    <div class="kpi-label"><i class="bi bi-cpu me-1"></i>Simulateur</div>
+    <div class="kpi-value {% if sim_running %}{% else %}kpi-gray{% endif %}" id="kpi-sim">
+      {% if sim_running %}ACTIF{% else %}ARRÊTÉ{% endif %}
+    </div>
+    <div class="kpi-sub">
+      {% if sim_running %}{{ sim_params.nb }} capteurs · {{ sim_params.freq }}s
+      {% else %}<a href="{% url 'simulation' %}" style="color:#f97316">→ Démarrer</a>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Graphiques temps réel ─────────────────────────────────── -->
+<div class="rw-card mb-4">
+  <div class="rw-card-header">
+    <i class="bi bi-graph-up-arrow"></i>
+    Mesures temps réel — 30 dernières minutes
+    <span style="margin-left:auto;font-size:.7rem;font-weight:400;color:var(--muted)">Actualisation auto 5 s</span>
+  </div>
+  <div class="rw-card-body" style="padding:.75rem">
+    <div class="chart-grid" id="charts-grid">
+      <!-- Les 6 cartes charts sont injectées par JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ── Tables ─────────────────────────────────────────────────── -->
+<div class="row g-3 mb-2">
+  <!-- Moyennes temps réel -->
+  <div class="col-md-5">
+    <div class="rw-card h-100">
+      <div class="rw-card-header"><i class="bi bi-thermometer-half"></i>Moyennes (5 min)</div>
+      <div class="rw-card-body p-0">
+        <table class="rw-table">
+          <thead><tr><th>Type</th><th>Moyenne</th><th>Unité</th><th>Capteurs</th></tr></thead>
+          <tbody>
+            {% for row in mesures %}
+            <tr>
+              <td><i class="bi bi-circle-fill me-1" style="color:var(--green);font-size:.4rem;vertical-align:middle"></i>{{ row.0 }}</td>
+              <td><strong style="color:var(--green)">{{ row.1 }}</strong></td>
+              <td style="color:var(--muted)">{{ row.2 }}</td>
+              <td><span class="badge-rw badge-basse">{{ row.3 }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--muted)">
+              <i class="bi bi-hourglass me-1"></i>Aucune mesure —
+              <a href="{% url 'simulation' %}" style="color:#f97316">démarrer le simulateur</a>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertes ouvertes -->
+  <div class="col-md-7">
+    <div class="rw-card h-100">
+      <div class="rw-card-header">
+        <i class="bi bi-bell-fill" style="color:#ef4444"></i>
+        <span style="color:#ef4444">Alertes ouvertes</span>
+        <a href="{% url 'alertes' %}" class="btn-ghost ms-auto" style="font-size:.75rem">Tout voir</a>
+      </div>
+      <div class="rw-card-body p-0">
+        <table class="rw-table">
+          <thead><tr><th>Capteur</th><th>Type</th><th>Message</th><th>Priorité</th></tr></thead>
+          <tbody>
+            {% for a in alertes %}
+            <tr>
+              <td><code style="color:var(--green)">{{ a.1 }}</code></td>
+              <td style="font-size:.8rem">{{ a.2 }}</td>
+              <td style="font-size:.8rem">{{ a.3|truncatechars:50 }}</td>
+              <td><span class="badge-rw badge-{{ a.4 }}">{{ a.4 }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--muted)">
+              <i class="bi bi-check-circle text-success me-1"></i>Aucune alerte ouverte
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Configuration des 6 types de capteurs ──────────────────────
+const SENSOR_TYPES = [
+  { nom: 'Température',  icon: 'bi-thermometer-half', color: '#ef4444' },
+  { nom: 'Pression',     icon: 'bi-speedometer2',     color: '#f97316' },
+  { nom: 'Débit',        icon: 'bi-water',            color: '#3b82f6' },
+  { nom: 'Vibration',    icon: 'bi-activity',         color: '#a855f7' },
+  { nom: 'Niveau',       icon: 'bi-layers',           color: '#22c55e' },
+  { nom: 'H2S gazeux',   icon: 'bi-cloud-haze2',      color: '#eab308' },
+];
+
+// ── Création des cartes et charts ─────────────────────────────
+const chartInstances = {};
+const grid = document.getElementById('charts-grid');
+
+SENSOR_TYPES.forEach(sensor => {
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  card.innerHTML = `
+    <div class="chart-header">
+      <span class="ch-title"><i class="bi ${sensor.icon}" style="color:${sensor.color}"></i>${sensor.nom}</span>
+      <span class="ch-val" id="val-${sensor.nom}" style="color:${sensor.color}">—</span>
+    </div>
+    <div class="chart-body">
+      <canvas id="chart-${sensor.nom}"></canvas>
+      <div class="no-data-msg" id="nodata-${sensor.nom}" style="display:none">
+        <i class="bi bi-hourglass" style="font-size:1.2rem"></i>
+        <span>En attente de données…</span>
+      </div>
+    </div>
+  `;
+  grid.appendChild(card);
+
+  const ctx = document.getElementById(`chart-${sensor.nom}`).getContext('2d');
+  chartInstances[sensor.nom] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        borderColor: sensor.color,
+        backgroundColor: sensor.color + '18',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHoverRadius: 3,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0c1a2e',
+          borderColor: '#162d4a',
+          borderWidth: 1,
+          titleColor: '#c8dff0',
+          bodyColor: sensor.color,
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y?.toFixed(2) ?? '—'}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#4a7090', font: { size: 9 }, maxTicksLimit: 6, maxRotation: 0 },
+          grid:  { color: 'rgba(22,45,74,.5)', lineWidth: .5 },
+        },
+        y: {
+          ticks: { color: '#4a7090', font: { size: 9 }, maxTicksLimit: 5 },
+          grid:  { color: 'rgba(22,45,74,.5)', lineWidth: .5 },
+        }
+      }
+    }
+  });
+});
+
+// ── Fetch et mise à jour des données ──────────────────────────
+async function updateChart(sensor) {
+  try {
+    const r = await fetch(`/api/mesures/${encodeURIComponent(sensor.nom)}/`);
+    if (!r.ok) return;
+    const d = await r.json();
+
+    const chart   = chartInstances[sensor.nom];
+    const valEl   = document.getElementById(`val-${sensor.nom}`);
+    const noData  = document.getElementById(`nodata-${sensor.nom}`);
+    const canvas  = document.getElementById(`chart-${sensor.nom}`);
+
+    if (!d.data || d.data.length === 0) {
+      canvas.style.display = 'none';
+      noData.style.display = 'flex';
+      valEl.textContent = '—';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    noData.style.display = 'none';
+
+    chart.data.labels = d.labels;
+    chart.data.datasets[0].data = d.data;
+    chart.update('none');
+
+    if (d.current !== null && d.current !== undefined) {
+      valEl.textContent = `${d.current.toFixed(2)} ${d.unite}`;
+    } else if (d.data.length > 0) {
+      const last = d.data[d.data.length - 1];
+      valEl.textContent = last !== null ? `${last.toFixed(2)} ${d.unite}` : '—';
+    }
+  } catch(e) {}
+}
+
+async function updateAll() {
+  for (const s of SENSOR_TYPES) {
+    await updateChart(s);
+  }
+}
+
+// Démarrage
+updateAll();
+setInterval(updateAll, 5000);
+</script>
+{% endblock %}

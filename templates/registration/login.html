@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connexion — RaffineryWatch</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(135deg, #060d1a 0%, #0a1628 50%, #060d1a 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .login-card { background:#0d1b2a; border:1px solid #1a3a5c; border-radius:16px; padding:2.5rem; width:100%; max-width:420px; box-shadow: 0 0 40px rgba(0,230,118,.08); }
+    .login-logo { color:#00e676; font-size:2.8rem; text-align:center; margin-bottom:.5rem; text-shadow: 0 0 20px rgba(0,230,118,.5); }
+    .login-title { color:#00e676; font-weight:700; font-size:1.5rem; text-align:center; letter-spacing:2px; }
+    .login-sub { color:#5a8fb0; text-align:center; font-size:.85rem; margin-bottom:2rem; }
+    .form-control { background:#060d1a; border-color:#1a3a5c; color:#cce8f4; }
+    .form-control:focus { background:#060d1a; border-color:#00e676; color:#cce8f4; box-shadow:0 0 0 .2rem rgba(0,230,118,.2); }
+    .form-label { color:#8ecae6; font-size:.85rem; }
+    .btn-login { background:linear-gradient(90deg, #0d47a1, #1565c0); border:none; color:#fff; font-weight:700; width:100%; padding:.75rem; letter-spacing:.5px; }
+    .btn-login:hover { background:linear-gradient(90deg, #1565c0, #1976d2); color:#fff; box-shadow: 0 0 15px rgba(21,101,192,.4); }
+    .divider { border-color:#1a3a5c; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo"><i class="bi bi-activity"></i></div>
+    <div class="login-title">RaffineryWatch</div>
+    <div class="login-sub">Surveillance IoT Industrielle — Connexion</div>
+
+    {% if form.errors %}
+    <div class="alert alert-danger py-2 small">
+      <i class="bi bi-exclamation-triangle me-1"></i>Identifiants incorrects.
+    </div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Nom d'utilisateur</label>
+        <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-login">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+      </button>
+    </form>
+  </div>
+</body>
+</html>

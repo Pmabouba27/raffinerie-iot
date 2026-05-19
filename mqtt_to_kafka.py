@@ -30,10 +30,12 @@ def on_message(client, userdata, msg):
 # CallbackAPIVersion.VERSION2 requis avec paho-mqtt >= 2.0
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.connect("localhost", 1883)
-client.subscribe("raffinerie/temp")
-client.subscribe("raffinerie/vib")
+# Abonnement wildcard : capte tous les capteurs du simulateur réaliste
+# Topics publiés : raffinerie/temperature/ID, raffinerie/pression/ID, etc.
+client.subscribe("raffinerie/#")
 client.on_message = on_message
 
+print("Bridge MQTT→Kafka démarré — écoute sur raffinerie/# (tous les types de capteurs)")
 print("En attente de messages MQTT... (Ctrl+C pour arrêter)")
 try:
     client.loop_forever()

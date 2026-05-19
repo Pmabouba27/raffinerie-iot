@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Simulation — RaffineryWatch{% endblock %}
+{% block page_title %}<i class="bi bi-cpu me-2" style="color:var(--green)"></i>Contrôle de la simulation{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <!-- Contrôle -->
+  <div class="col-md-5">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-sliders me-2"></i>Contrôle du simulateur</div>
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div style="font-size:3.5rem" class="{% if sim_running %}sim-running{% else %}sim-stopped{% endif %}">
+            <i class="bi bi-broadcast{% if not sim_running %}-pin{% endif %}"></i>
+          </div>
+          <h5 class="mt-2 {% if sim_running %}text-success{% else %}text-secondary{% endif %}">
+            {% if sim_running %}Simulation en cours{% else %}Simulation arrêtée{% endif %}
+          </h5>
+          {% if sim_running %}
+          <small class="text-muted">{{ sim_params.nb }} capteurs · toutes les {{ sim_params.freq }} secondes</small>
+          {% endif %}
+        </div>
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label text-muted small text-uppercase">
+              <i class="bi bi-broadcast me-1"></i>Nombre de capteurs (1–70)
+            </label>
+            <input type="range" class="form-range" name="nb" min="1" max="70"
+                   value="{{ sim_params.nb }}"
+                   oninput="document.getElementById('nb-v').textContent=this.value">
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">1</small>
+              <strong id="nb-v" style="color:var(--rw-green)">{{ sim_params.nb }}</strong>
+              <small class="text-muted">70</small>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label text-muted small text-uppercase">
+              <i class="bi bi-clock me-1"></i>Fréquence (secondes entre mesures)
+            </label>
+            <input type="range" class="form-range" name="freq" min="1" max="10"
+                   value="{{ sim_params.freq }}"
+                   oninput="document.getElementById('freq-v').textContent=this.value+'s'">
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">1s</small>
+              <strong id="freq-v" style="color:var(--rw-green)">{{ sim_params.freq }}s</strong>
+              <small class="text-muted">10s</small>
+            </div>
+          </div>
+          <div class="d-grid gap-2">
+            {% if not sim_running %}
+            <button type="submit" name="action" value="start" class="btn btn-rw btn-lg">
+              <i class="bi bi-play-fill me-2"></i>Démarrer la simulation
+            </button>
+            {% else %}
+            <button type="submit" name="action" value="stop" class="btn btn-danger btn-lg">
+              <i class="bi bi-stop-fill me-2"></i>Arrêter la simulation
+            </button>
+            <button type="submit" name="action" value="start" class="btn btn-outline-warning">
+              <i class="bi bi-arrow-repeat me-2"></i>Redémarrer (nouveaux paramètres)
+            </button>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats + config -->
+  <div class="col-md-7">
+    <!-- Répartition modes -->
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>État des capteurs (dernière minute)</div>
+      <div class="card-body">
+        {% if modes and modes.2 %}
+          {% with total=modes.2|add:0 normal=modes.0|add:0 hors=modes.1|add:0 %}
+          {% if total > 0 %}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <small><span class="dot-up me-1"></span>Dans les seuils</small>
+              <strong class="text-success">{{ normal }} / {{ total }}</strong>
+            </div>
+            <div class="progress" style="height:8px;background:var(--rw-border)">
+              <div class="progress-bar bg-success" style="width:{% widthratio normal total 100 %}%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="d-flex justify-content-between mb-1">
+              <small><i class="bi bi-circle-fill me-1" style="color:var(--rw-green);font-size:.5rem;vertical-align:middle"></i>Hors seuils</small>
+              <strong style="color:var(--rw-green)">{{ hors }} / {{ total }}</strong>
+            </div>
+            <div class="progress" style="height:8px;background:var(--rw-border)">
+              <div class="progress-bar" style="width:{% widthratio hors total 100 %}%;background:var(--rw-green)"></div>
+            </div>
+          </div>
+          {% endif %}
+          {% endwith %}
+        {% else %}
+          <p class="text-muted text-center py-2 mb-0">
+            <i class="bi bi-hourglass me-1"></i>En attente de données…
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Paramètres physiques -->
+    <div class="card">
+      <div class="card-header"><i class="bi bi-sliders2 me-2"></i>Plages physiques par type de capteur</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Type</th><th>Unité</th><th>Min</th><th>Max</th><th>Capteurs actifs</th></tr></thead>
+          <tbody>
+            {% for row in capteurs_config %}
+            <tr>
+              <td>{{ row.0 }}</td>
+              <td class="text-muted">{{ row.1 }}</td>
+              <td>{{ row.2 }}</td>
+              <td>{{ row.3 }}</td>
+              <td><span class="badge" style="background:var(--rw-green)">{{ row.4|default:0 }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modèle Random Walk -->
+<div class="card mb-4">
+  <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Modèle de simulation — Random Walk avec inertie</div>
+  <div class="card-body">
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="p-3 rounded" style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2)">
+          <h6 class="text-success"><i class="bi bi-circle-fill me-1" style="font-size:.6rem"></i>Normal</h6>
+          <p class="small text-muted mb-0">Fluctuations gaussiennes autour de la valeur nominale avec rappel (force ressort). Inertie : 0.88–0.97 selon le type.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 rounded" style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2)">
+          <h6 style="color:#eab308"><i class="bi bi-circle-fill me-1" style="font-size:.6rem"></i>Dégradé</h6>
+          <p class="small text-muted mb-0">Dérive lente vers le seuil d'alerte. Probabilité 0.3%/tick. Corrélations zones activées (temp↑ → pression↑, débit↑).</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 rounded" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2)">
+          <h6 class="text-danger"><i class="bi bi-circle-fill me-1" style="font-size:.6rem"></i>Anomalie</h6>
+          <p class="small text-muted mb-0">Pic brutal (3 ticks) / dérive hors plage / panne capteur (NULL). Probabilité 1%/tick depuis dégradé.</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-2 rounded" style="background:#0d1117;font-family:monospace;font-size:.9rem;color:#94a3b8">
+      <span style="color:#f97316">valeur(t+1)</span> = valeur(t) × <span style="color:#22c55e">inertie</span> + (valeur(t) + <span style="color:#eab308">bruit</span> + <span style="color:#3b82f6">rappel</span>) × (1 − <span style="color:#22c55e">inertie</span>)
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Pipeline IoT — RaffineryWatch{% endblock %}
+{% block page_title %}<i class="bi bi-diagram-3 me-2" style="color:var(--green)"></i>Pipeline IoT{% endblock %}
+
+{% block content %}
+
+<!-- Schéma architecture -->
+<div class="card mb-4">
+  <div class="card-header"><i class="bi bi-diagram-3 me-2"></i>Architecture Pipeline IoT — RaffineryWatch</div>
+  <div class="card-body">
+    <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 py-2">
+      {% for step in pipeline_steps %}
+      <div class="text-center p-2 rounded" style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);min-width:85px">
+        <i class="bi bi-{{ step.icon }}" style="color:{{ step.color }};font-size:1.5rem"></i>
+        <div style="color:{{ step.color }};font-size:.7rem;margin-top:4px;line-height:1.2">{{ step.label }}</div>
+      </div>
+      {% if not forloop.last %}<i class="bi bi-arrow-right text-muted"></i>{% endif %}
+      {% endfor %}
+    </div>
+    <div class="text-center mt-3">
+      <div class="d-flex justify-content-center align-items-center flex-wrap gap-3">
+        <div class="p-2 rounded text-center" style="background:rgba(249,115,22,.08);border:1px solid var(--rw-border);min-width:85px">
+          <i class="bi bi-cpu" style="color:#f97316;font-size:1.4rem"></i>
+          <div style="color:#f97316;font-size:.7rem;margin-top:4px">Simulateur<br>Python</div>
+        </div>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <div class="p-2 rounded text-center" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);min-width:85px">
+          <i class="bi bi-router" style="color:#3b82f6;font-size:1.4rem"></i>
+          <div style="color:#3b82f6;font-size:.7rem;margin-top:4px">Mosquitto<br>:1883</div>
+        </div>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <div class="p-2 rounded text-center" style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);min-width:85px">
+          <i class="bi bi-boxes" style="color:#8b5cf6;font-size:1.4rem"></i>
+          <div style="color:#8b5cf6;font-size:.7rem;margin-top:4px">Kafka<br>:9092</div>
+        </div>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <div class="p-2 rounded text-center" style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);min-width:85px">
+          <i class="bi bi-lightning-charge" style="color:#eab308;font-size:1.4rem"></i>
+          <div style="color:#eab308;font-size:.7rem;margin-top:4px">Spark<br>:7077</div>
+        </div>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <div class="d-flex flex-column gap-2">
+          <div class="p-2 rounded text-center" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);min-width:85px">
+            <i class="bi bi-database" style="color:#22c55e;font-size:1.2rem"></i>
+            <div style="color:#22c55e;font-size:.7rem;margin-top:2px">TimescaleDB<br>:5432</div>
+          </div>
+          <div class="p-2 rounded text-center" style="background:rgba(249,115,22,.08);border:1px solid var(--rw-border);min-width:85px">
+            <i class="bi bi-bucket" style="color:#f97316;font-size:1.2rem"></i>
+            <div style="color:#f97316;font-size:.7rem;margin-top:2px">MinIO<br>:9002</div>
+          </div>
+        </div>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <div class="p-2 rounded text-center" style="background:rgba(249,115,22,.08);border:1px solid var(--rw-border);min-width:85px">
+          <i class="bi bi-graph-up" style="color:#f97316;font-size:1.4rem"></i>
+          <div style="color:#f97316;font-size:.7rem;margin-top:4px">Grafana<br>:3000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Statut conteneurs -->
+  <div class="col-md-7">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-hdd-rack me-2"></i>Statut des conteneurs Docker</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Service</th><th>Statut</th><th>Port</th><th>Lien</th></tr></thead>
+          <tbody>
+            {% for svc in services %}
+            <tr>
+              <td><i class="bi bi-box me-1" style="color:var(--rw-green)"></i>{{ svc.label }}</td>
+              <td>
+                {% if 'running' in svc.state or 'Up' in svc.state %}
+                  <span class="dot-up me-1"></span><span class="text-success small">Running</span>
+                {% elif 'exited' in svc.state or 'Exit' in svc.state %}
+                  <span class="dot-down me-1"></span><span class="text-danger small">Exited</span>
+                {% else %}
+                  <span class="dot-unknown me-1"></span><span class="text-muted small">{{ svc.state }}</span>
+                {% endif %}
+              </td>
+              <td><small class="text-muted">{{ svc.port }}</small></td>
+              <td>
+                {% if svc.service == 'grafana' %}
+                  <a href="http://localhost:3000" target="_blank" class="btn btn-sm btn-outline-warning py-0 px-2 small">Ouvrir</a>
+                {% elif svc.service == 'minio' %}
+                  <a href="http://localhost:9001" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2 small">Console</a>
+                {% elif svc.service == 'spark-master' %}
+                  <a href="http://localhost:8081" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2 small">UI</a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métriques -->
+  <div class="col-md-5">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Métriques pipeline</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <div class="kpi-label">Mesures (dernière minute)</div>
+          <div class="kpi-value">{{ mesures_last_min }}</div>
+          <small class="text-muted">insertions TimescaleDB</small>
+        </div>
+        <hr style="border-color:var(--rw-border)">
+        <div class="mb-3">
+          <div class="kpi-label">Simulateur</div>
+          <div class="kpi-value {% if sim_running %}sim-running{% else %}sim-stopped{% endif %}">
+            {% if sim_running %}ACTIF{% else %}ARRÊTÉ{% endif %}
+          </div>
+          <small class="text-muted"><a href="{% url 'simulation' %}" class="text-warning">→ Contrôler</a></small>
+        </div>
+        <hr style="border-color:var(--rw-border)">
+        <div class="d-grid gap-2">
+          <a href="http://localhost:3000" target="_blank" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-graph-up me-1"></i>Grafana
+          </a>
+          <a href="http://localhost:9001" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-bucket me-1"></i>MinIO Console
+          </a>
+          <a href="http://localhost:8081" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-lightning me-1"></i>Spark UI
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>setTimeout(() => location.reload(), 30000);</script>
+{% endblock %}

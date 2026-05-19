@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/custom.css' %}">
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">
+    ⬡ RaffineryWatch <span style="font-size:.7rem;font-weight:400;color:#5a8fb0">Administration IoT</span>
+  </a>
+</h1>
+{% endblock %}

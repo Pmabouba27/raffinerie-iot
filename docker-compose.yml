@@ -109,10 +109,33 @@ services:
     image: grafana/grafana:latest
     ports:
       - 3000:3000
+    environment:
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
       - iot-net
+
+  django:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=timescaledb
+      - DB_PORT=5432
+      - DB_NAME=iotdb
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      - DJANGO_SETTINGS_MODULE=config.settings
+    depends_on:
+      - timescaledb
+    volumes:
+      - .:/app
+    networks:
+      - iot-net
+    restart: unless-stopped
 
 networks:
   iot-net:

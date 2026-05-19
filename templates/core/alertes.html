@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Alertes — RaffineryWatch{% endblock %}
+{% block page_title %}<i class="bi bi-bell me-2" style="color:var(--green)"></i>Alertes{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  {% for row in stats %}
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left:4px solid {% if row.0 == 'ouverte' %}#ef4444{% elif row.0 == 'acquittee' %}#22c55e{% else %}#6b7280{% endif %}">
+      <div class="kpi-label" style="color:{% if row.0 == 'ouverte' %}#ef4444{% elif row.0 == 'acquittee' %}#22c55e{% else %}#6b7280{% endif %}">
+        {{ row.0|upper }}
+      </div>
+      <div class="kpi-value" style="color:{% if row.0 == 'ouverte' %}#ef4444{% elif row.0 == 'acquittee' %}#22c55e{% else %}#6b7280{% endif %}">
+        {{ row.1 }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-bell-fill me-2"></i>Historique des alertes (50 dernières)</span>
+    <span class="badge" style="background:var(--rw-green)">{{ alertes|length }} entrées</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>#</th><th>Capteur</th><th>Zone</th><th>Type</th>
+            <th>Message</th><th>Priorité</th><th>Statut</th><th>Date</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in alertes %}
+          <tr>
+            <td><small class="text-muted">{{ a.0 }}</small></td>
+            <td><code style="color:var(--rw-green)">{{ a.1 }}</code></td>
+            <td><small>{{ a.2|default:"—" }}</small></td>
+            <td><small>{{ a.3 }}</small></td>
+            <td><small>{{ a.4|truncatechars:70 }}</small></td>
+            <td><span class="badge badge-{{ a.5 }}">{{ a.5 }}</span></td>
+            <td>
+              {% if a.6 == 'ouverte' %}
+                <span class="badge bg-danger">ouverte</span>
+              {% else %}
+                <span class="badge bg-success">acquittée</span>
+              {% endif %}
+            </td>
+            <td><small class="text-muted">{{ a.7|default:"—" }}</small></td>
+            <td>
+              {% if a.6 == 'ouverte' %}
+              <form method="POST" action="{% url 'acquitter' a.0 %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2" title="Acquitter">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+              {% else %}
+              <i class="bi bi-check-all text-muted"></i>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center py-5 text-muted">
+            <i class="bi bi-check-circle text-success" style="font-size:2rem"></i><br>
+            <span class="mt-2 d-block">Aucune alerte enregistrée</span>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

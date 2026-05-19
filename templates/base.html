@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RaffineryWatch{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    /* ── Variables ─────────────────────────────────────── */
+    :root {
+      --green:   #00e676;
+      --green-d: #00c853;
+      --blue:    #0d47a1;
+      --blue-l:  #1565c0;
+      --bg:      #06101f;
+      --sidebar: #080f1d;
+      --card:    #0c1a2e;
+      --card2:   #0f2040;
+      --border:  #162d4a;
+      --text:    #c8dff0;
+      --muted:   #4a7090;
+      --sidebar-w: 220px;
+    }
+
+    /* ── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: .92rem; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ───────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform .25s;
+    }
+
+    .sidebar-logo {
+      padding: 1.4rem 1.2rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo .brand {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: .5px;
+      text-shadow: 0 0 16px rgba(0,230,118,.3);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      text-decoration: none;
+    }
+    .sidebar-logo .brand-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-l));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+      box-shadow: 0 0 10px rgba(0,230,118,.2);
+    }
+    .sidebar-logo .brand-sub {
+      font-size: .65rem;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0;
+      display: block;
+      margin-top: 1px;
+    }
+
+    /* Nav links */
+    .sidebar-nav { padding: .75rem 0; flex: 1; }
+    .nav-section { padding: .4rem 1.2rem .2rem; font-size: .65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-top: .5rem; }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .55rem 1.2rem;
+      color: #7a9cbd;
+      text-decoration: none;
+      font-size: .875rem;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+      margin: 1px 0;
+    }
+    .sidebar-link:hover {
+      color: var(--text);
+      background: rgba(255,255,255,.04);
+    }
+    .sidebar-link.active {
+      color: var(--green);
+      background: rgba(0,230,118,.07);
+      border-left-color: var(--green);
+      font-weight: 600;
+    }
+    .sidebar-link .nav-icon {
+      width: 18px;
+      text-align: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .sidebar-link .badge-count {
+      margin-left: auto;
+      background: rgba(239,68,68,.2);
+      color: #ef4444;
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+
+    /* Simulateur status dot dans sidebar */
+    .sim-status-pill {
+      margin: 0 .8rem .5rem;
+      padding: .45rem .75rem;
+      border-radius: 8px;
+      background: rgba(0,0,0,.2);
+      border: 1px solid var(--border);
+      font-size: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); animation: blink 2s infinite; }
+    .dot-gray  { background: #334e68; }
+    .dot-red   { background: #ef4444; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* Sidebar bottom */
+    .sidebar-bottom {
+      padding: .75rem 1rem;
+      border-top: 1px solid var(--border);
+      font-size: .8rem;
+    }
+    .user-pill {
+      display: flex; align-items: center; gap: .5rem;
+      color: var(--muted);
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      background: var(--blue);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .logout-btn {
+      display: block;
+      margin-top: .5rem;
+      text-align: center;
+      padding: .3rem;
+      border-radius: 6px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .78rem;
+      transition: all .15s;
+    }
+    .logout-btn:hover { color: #ef4444; border-color: rgba(239,68,68,.3); }
+
+    /* ── Main content ──────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Topbar */
+    .topbar {
+      height: 52px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      flex: 1;
+    }
+    .topbar-actions { display: flex; align-items: center; gap: .75rem; }
+
+    /* Content area */
+    .content { padding: 1.5rem; flex: 1; }
+
+    /* ── Cards ─────────────────────────────────────────── */
+    .rw-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .rw-card-header {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      color: var(--green);
+      font-size: .85rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .rw-card-body { padding: 1rem; }
+
+    /* KPIs */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+    .kpi-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      border-left: 3px solid var(--green);
+    }
+    .kpi-box.kpi-red   { border-left-color: #ef4444; }
+    .kpi-box.kpi-blue  { border-left-color: var(--blue-l); }
+    .kpi-box.kpi-gray  { border-left-color: var(--muted); }
+    .kpi-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: .25rem; }
+    .kpi-value { font-size: 1.9rem; font-weight: 800; color: var(--green); line-height: 1; }
+    .kpi-box.kpi-red   .kpi-value { color: #ef4444; }
+    .kpi-box.kpi-blue  .kpi-value { color: #5b9bd5; }
+    .kpi-box.kpi-gray  .kpi-value { color: var(--muted); }
+    .kpi-sub { font-size: .72rem; color: var(--muted); margin-top: .25rem; }
+
+    /* Tables */
+    .rw-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+    .rw-table thead th { color: var(--green); border-bottom: 1px solid var(--border); padding: .5rem .75rem; text-transform: uppercase; font-size: .7rem; letter-spacing: .5px; font-weight: 600; white-space: nowrap; }
+    .rw-table tbody td { padding: .5rem .75rem; border-bottom: 1px solid rgba(22,45,74,.5); vertical-align: middle; }
+    .rw-table tbody tr:last-child td { border-bottom: none; }
+    .rw-table tbody tr:hover { background: rgba(0,230,118,.03); }
+
+    /* Badges priorité */
+    .badge-critique { background:#ef4444; color:#fff; }
+    .badge-haute    { background:#f97316; color:#fff; }
+    .badge-moyenne  { background:#ca8a04; color:#fff; }
+    .badge-basse    { background:var(--blue-l); color:#fff; }
+    .badge-rw { display:inline-block; padding:2px 8px; border-radius:4px; font-size:.72rem; font-weight:600; }
+
+    /* Buttons */
+    .btn-green { background: var(--green-d); color: #000; border: none; font-weight: 700; border-radius: 6px; padding: .4rem 1rem; cursor: pointer; transition: all .15s; }
+    .btn-green:hover { background: var(--green); box-shadow: 0 0 12px rgba(0,230,118,.3); }
+    .btn-blue  { background: var(--blue-l); color: #fff; border: none; font-weight: 600; border-radius: 6px; padding: .4rem 1rem; cursor: pointer; }
+    .btn-blue:hover  { background: var(--blue); }
+    .btn-red   { background: #c62828; color: #fff; border: none; font-weight: 600; border-radius: 6px; padding: .4rem 1rem; cursor: pointer; }
+    .btn-red:hover   { background: #b71c1c; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: .35rem .85rem; cursor: pointer; font-size: .82rem; text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; transition: all .15s; }
+    .btn-ghost:hover { color: var(--text); border-color: #2a4a6a; }
+
+    /* Grafana frame */
+    .grafana-frame { width:100%; height:420px; border:none; border-radius:0 0 10px 10px; }
+
+    /* Alerts */
+    .alert-banner { padding: .6rem 1rem; border-radius: 7px; margin-bottom: 1rem; font-size: .84rem; display: flex; align-items: center; gap: .5rem; }
+    .alert-success { background: rgba(0,200,83,.1); border: 1px solid rgba(0,200,83,.25); color: #69f0ae; }
+    .alert-warning { background: rgba(245,124,0,.1); border: 1px solid rgba(245,124,0,.25); color: #ffcc02; }
+    .alert-danger  { background: rgba(183,28,28,.1); border: 1px solid rgba(183,28,28,.25); color: #ef9a9a; }
+
+    /* ── Bootstrap overrides — aucun fond blanc ──────────── */
+    /* Variables Bootstrap */
+    :root {
+      --bs-body-bg: var(--bg);
+      --bs-body-color: var(--text);
+      --bs-card-bg: var(--card);
+      --bs-card-border-color: var(--border);
+      --bs-table-bg: transparent;
+      --bs-table-color: var(--text);
+      --bs-table-border-color: var(--border);
+      --bs-table-hover-bg: rgba(0,230,118,.04);
+      --bs-table-striped-bg: rgba(12,26,46,.6);
+      --bs-border-color: var(--border);
+      --bs-secondary-bg: var(--card2);
+      --bs-form-control-bg: var(--card2);
+    }
+    /* Fond global Bootstrap */
+    body.container, .container, .container-fluid { background: var(--bg); }
+
+    /* Cards Bootstrap */
+    .card {
+      background: var(--card) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+    }
+    .card-header {
+      background: rgba(12,26,46,.6) !important;
+      border-bottom: 1px solid var(--border) !important;
+      color: var(--green) !important;
+      font-weight: 600;
+      font-size: .85rem;
+    }
+    .card-body { background: transparent !important; color: var(--text) !important; }
+
+    /* Tables Bootstrap */
+    .table { color: var(--text) !important; }
+    .table > :not(caption) > * > * {
+      background-color: transparent !important;
+      color: var(--text);
+      border-color: rgba(22,45,74,.6) !important;
+    }
+    .table thead th, .table > thead > tr > th {
+      color: var(--green) !important;
+      border-bottom: 1px solid var(--border) !important;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      font-weight: 600;
+    }
+    .table > tbody > tr:hover > * {
+      background-color: rgba(0,230,118,.03) !important;
+    }
+
+    /* Badges Bootstrap */
+    .badge.bg-secondary { background: rgba(22,45,74,.8) !important; color: var(--text) !important; }
+    .badge.bg-danger    { background: rgba(183,28,28,.8) !important; }
+    .badge.bg-success   { background: rgba(0,150,62,.8) !important; }
+    .badge.bg-warning   { background: rgba(180,120,0,.8) !important; color: #fff !important; }
+
+    /* Textes Bootstrap */
+    .text-muted { color: var(--muted) !important; }
+    .text-success { color: var(--green) !important; }
+    .text-danger  { color: #ef4444 !important; }
+    .text-warning { color: #f97316 !important; }
+
+    /* Formulaires Bootstrap */
+    .form-control, .form-select {
+      background: var(--card2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--card2) !important;
+      border-color: var(--green) !important;
+      color: var(--text) !important;
+      box-shadow: 0 0 0 2px rgba(0,230,118,.15) !important;
+    }
+    .form-label { color: var(--muted) !important; }
+    .form-range { accent-color: var(--green); }
+
+    /* Boutons Bootstrap outline */
+    .btn-outline-warning { color: #f97316 !important; border-color: #f97316 !important; }
+    .btn-outline-warning:hover { background: rgba(249,115,22,.15) !important; color: #f97316 !important; }
+    .btn-outline-success { color: var(--green) !important; border-color: var(--green) !important; }
+    .btn-outline-success:hover { background: rgba(0,230,118,.12) !important; color: var(--green) !important; }
+    .btn-outline-secondary { color: var(--muted) !important; border-color: var(--border) !important; }
+    .btn-outline-secondary:hover { background: rgba(255,255,255,.05) !important; }
+    .btn-danger { background: #b71c1c !important; border-color: #b71c1c !important; }
+    .btn-danger:hover { background: #c62828 !important; }
+    .btn-rw { background: var(--green-d) !important; color: #000 !important; border: none !important; font-weight: 700; }
+    .btn-rw:hover { background: var(--green) !important; box-shadow: 0 0 12px rgba(0,230,118,.3); }
+
+    /* Progress bars */
+    .progress { background: var(--border) !important; }
+    .progress-bar.bg-success { background: var(--green) !important; }
+
+    /* Status dots pipeline */
+    .dot-up      { display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2s infinite; }
+    .dot-down    { display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444; }
+    .dot-unknown { display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted); }
+    .sim-running { color: var(--green) !important; text-shadow: 0 0 12px rgba(0,230,118,.4); }
+    .sim-stopped { color: var(--muted) !important; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Sidebar ───────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <a href="/" class="brand">
+      <div class="brand-icon"><i class="bi bi-activity" style="color:var(--green)"></i></div>
+      <div>
+        RaffineryWatch
+        <span class="brand-sub">Surveillance IoT</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="nav-section">Navigation</div>
+
+    <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
+    </a>
+    <a href="{% url 'simulation' %}" class="sidebar-link {% if request.resolver_match.url_name == 'simulation' %}active{% endif %}">
+      <i class="bi bi-cpu nav-icon"></i> Simulation
+    </a>
+    <a href="{% url 'alertes' %}" class="sidebar-link {% if request.resolver_match.url_name == 'alertes' %}active{% endif %}">
+      <i class="bi bi-bell nav-icon"></i> Alertes
+      <span class="badge-count" id="alerts-count" style="display:none">0</span>
+    </a>
+    <a href="{% url 'pipeline' %}" class="sidebar-link {% if request.resolver_match.url_name == 'pipeline' %}active{% endif %}">
+      <i class="bi bi-diagram-3 nav-icon"></i> Pipeline IoT
+    </a>
+
+    {% if user.is_staff %}
+    <div class="nav-section" style="margin-top:1rem">Administration</div>
+    <a href="/admin/" class="sidebar-link">
+      <i class="bi bi-shield-lock nav-icon"></i> Admin Django
+    </a>
+    <a href="/admin/core/capteur/" class="sidebar-link">
+      <i class="bi bi-broadcast nav-icon"></i> Capteurs
+    </a>
+    <a href="/admin/core/alerte/" class="sidebar-link">
+      <i class="bi bi-exclamation-triangle nav-icon"></i> Alertes admin
+    </a>
+    <a href="/admin/core/reglealerte/" class="sidebar-link">
+      <i class="bi bi-sliders nav-icon"></i> Règles d'alerte
+    </a>
+    {% endif %}
+
+    <div class="nav-section" style="margin-top:1rem">Outils</div>
+    <a href="http://localhost:3000" target="_blank" class="sidebar-link">
+      <i class="bi bi-graph-up nav-icon"></i> Grafana <i class="bi bi-box-arrow-up-right ms-auto" style="font-size:.65rem;opacity:.5"></i>
+    </a>
+    <a href="http://localhost:9001" target="_blank" class="sidebar-link">
+      <i class="bi bi-bucket nav-icon"></i> MinIO <i class="bi bi-box-arrow-up-right ms-auto" style="font-size:.65rem;opacity:.5"></i>
+    </a>
+    <a href="http://localhost:8081" target="_blank" class="sidebar-link">
+      <i class="bi bi-lightning nav-icon"></i> Spark UI <i class="bi bi-box-arrow-up-right ms-auto" style="font-size:.65rem;opacity:.5"></i>
+    </a>
+  </nav>
+
+  <!-- Statut simulateur -->
+  <div class="sim-status-pill" id="sim-pill">
+    <div class="dot dot-gray" id="sim-dot"></div>
+    <span id="sim-text" style="color:var(--muted)">Chargement…</span>
+  </div>
+
+  <!-- Utilisateur -->
+  <div class="sidebar-bottom">
+    <div class="user-pill">
+      <div class="user-avatar">{{ user.username|first|upper }}</div>
+      <div>
+        <div style="color:var(--text);font-weight:600;line-height:1.2">{{ user.username }}</div>
+        <div style="font-size:.7rem;color:var(--muted)">{% if user.is_staff %}Administrateur{% else %}Opérateur{% endif %}</div>
+      </div>
+    </div>
+    <a href="{% url 'logout' %}" class="logout-btn">
+      <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ── Main ──────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="btn-ghost d-md-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+      <i class="bi bi-list"></i>
+    </button>
+    <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+    <div class="topbar-actions">
+      <a href="http://localhost:3000" target="_blank" class="btn-ghost">
+        <i class="bi bi-graph-up"></i> Grafana
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages Django -->
+  <div class="content" style="padding-bottom:0;padding-top:.75rem">
+    {% if messages %}
+      {% for msg in messages %}
+      <div class="alert-banner alert-{% if msg.tags == 'error' %}danger{% elif msg.tags == 'warning' %}warning{% else %}success{% endif %}">
+        <i class="bi bi-{% if msg.tags == 'error' %}exclamation-circle{% elif msg.tags == 'warning' %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Contenu page -->
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Statut simulateur en temps réel
+  async function refreshSim() {
+    try {
+      const d = await (await fetch('/api/status/')).json();
+      const dot  = document.getElementById('sim-dot');
+      const text = document.getElementById('sim-text');
+      const cnt  = document.getElementById('alerts-count');
+
+      if (d.simulateur === 'running') {
+        dot.className  = 'dot dot-green';
+        text.style.color = 'var(--green)';
+        text.textContent = `${d.params.nb} capteurs actifs`;
+      } else {
+        dot.className  = 'dot dot-gray';
+        text.style.color = 'var(--muted)';
+        text.textContent = 'Simulateur arrêté';
+      }
+
+      if (d.alertes_ouvertes > 0) {
+        cnt.style.display = 'inline';
+        cnt.textContent = d.alertes_ouvertes;
+      } else {
+        cnt.style.display = 'none';
+      }
+    } catch(e) {}
+  }
+  refreshSim();
+  setInterval(refreshSim, 5000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
