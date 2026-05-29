@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Modifier {{ capteur.nom }}{% endblock %}
+{% block page_title %}<i class="bi bi-pencil me-2" style="color:var(--green)"></i>Modifier le capteur{% endblock %}
+{% block extra_head %}{% include "core/gestion/_form_styles.html" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="rw-card">
+      <div class="rw-card-header">
+        <i class="bi bi-broadcast"></i>
+        <code style="color:var(--green)">{{ capteur.code }}</code> — {{ capteur.nom }}
+      </div>
+      <div class="rw-card-body">
+        <form method="POST" class="rw-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>{{ form.nom.label }}</label>
+            {{ form.nom }}{{ form.nom.errors }}
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.type_capteur.label }}</label>{{ form.type_capteur }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.statut.label }}</label>{{ form.statut }}
+            </div>
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.zone.label }}</label>{{ form.zone }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.equipement.label }}</label>{{ form.equipement }}
+            </div>
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.seuil_min.label }}</label>{{ form.seuil_min }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.seuil_max.label }}</label>{{ form.seuil_max }}
+            </div>
+          </div>
+          {% if form.non_field_errors %}
+            <div style="color:#ef4444;font-size:.85rem">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <div style="display:flex;gap:.75rem;margin-top:.5rem">
+            <button type="submit" class="btn-green"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
+            <a href="{% url 'gestion_capteurs' %}" class="btn-ghost">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

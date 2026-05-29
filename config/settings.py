@@ -55,7 +55,7 @@ DATABASES = {
         'NAME':     os.environ.get('DB_NAME',     'iotdb'),
         'USER':     os.environ.get('DB_USER',     'admin'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'admin'),
-        'HOST':     os.environ.get('DB_HOST',     'timescaledb'),
+        'HOST':     os.environ.get('DB_HOST',     'localhost'),
         'PORT':     os.environ.get('DB_PORT',     '5432'),
     }
 }
@@ -64,9 +64,9 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
 ]
-LOGIN_URL           = '/login/'
-LOGIN_REDIRECT_URL  = '/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL           = '/login/'         # Non connecté → page de connexion
+LOGIN_REDIRECT_URL  = '/'               # Après connexion → dashboard
+LOGOUT_REDIRECT_URL = '/login/'         # Après déconnexion → connexion
 
 # ── Internationalisation ────────────────────────────────────────────────────────
 LANGUAGE_CODE = 'fr-fr'

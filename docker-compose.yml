@@ -99,7 +99,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: iotdb
     ports:
-      - 5432:5432
+      - 5433:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -118,6 +118,31 @@ services:
     networks:
       - iot-net
 
+  anomalie-detector:
+    build:
+      context: .
+      dockerfile: spark/Dockerfile.detector
+    environment:
+      - KAFKA_BROKER=kafka:29092
+      - DB_HOST=timescaledb
+      - DB_PORT=5432
+      - DB_NAME=iotdb
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      # Hybrid Learning — ré-entraînement depuis MinIO
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minio
+      - MINIO_SECRET_KEY=minio123
+    depends_on:
+      - kafka
+      - timescaledb
+      - minio
+    volumes:
+      - ./spark:/app
+    networks:
+      - iot-net
+    restart: unless-stopped
+
   django:
     build: .
     ports:
@@ -129,6 +154,7 @@ services:
       - DB_USER=admin
       - DB_PASSWORD=admin
       - DJANGO_SETTINGS_MODULE=config.settings
+      - MQTT_HOST=mqtt
     depends_on:
       - timescaledb
     volumes:

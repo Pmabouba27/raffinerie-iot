@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Zones — Gestion{% endblock %}
+{% block page_title %}<i class="bi bi-map me-2" style="color:var(--blue-l)"></i>Gestion des zones{% endblock %}
+{% block extra_head %}{% include "core/gestion/_form_styles.html" %}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="rw-card h-100">
+      <div class="rw-card-header" style="color:var(--blue-l)"><i class="bi bi-plus-circle"></i> Ajouter une zone</div>
+      <div class="rw-card-body">
+        <form method="POST" class="rw-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>{{ form.nom.label }}</label>
+            {{ form.nom }}{{ form.nom.errors }}
+          </div>
+          <div class="form-group">
+            <label>{{ form.description.label }}</label>
+            {{ form.description }}
+          </div>
+          <button type="submit" class="btn-blue"><i class="bi bi-plus-lg me-1"></i>Créer la zone</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="rw-card">
+      <div class="rw-card-header" style="color:var(--blue-l)">
+        <i class="bi bi-map"></i> Zones enregistrées
+        <span style="margin-left:auto;font-weight:400;font-size:.75rem;color:var(--muted)">{{ zones|length }} zone(s)</span>
+      </div>
+      <div class="rw-card-body p-0">
+        <table class="rw-table">
+          <thead>
+            <tr><th>Nom</th><th>Description</th><th>Équipements</th><th>Capteurs</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for z in zones %}
+            <tr>
+              <td><strong>{{ z.obj.nom }}</strong></td>
+              <td style="font-size:.82rem;color:var(--muted)">{{ z.obj.description|truncatechars:60|default:"—" }}</td>
+              <td><span class="badge-rw badge-basse">{{ z.nb_equipements }}</span></td>
+              <td><span class="badge-rw" style="background:rgba(0,230,118,.15);color:var(--green)">{{ z.nb_capteurs }}</span></td>
+              <td style="white-space:nowrap">
+                <a href="{% url 'gestion_zone_edit' z.obj.pk %}" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% if z.nb_capteurs == 0 and z.nb_equipements == 0 %}
+                <form method="POST" action="{% url 'gestion_zone_delete' z.obj.pk %}" style="display:inline"
+                      onsubmit="return confirm('Supprimer la zone {{ z.obj.nom }} ?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem;color:#ef4444;border-color:rgba(239,68,68,.3)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+                {% else %}
+                <span style="font-size:.75rem;color:var(--muted)" title="Zone avec capteurs/équipements actifs">
+                  <i class="bi bi-lock"></i>
+                </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Aucune zone.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

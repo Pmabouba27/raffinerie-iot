@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Alerte #{{ alerte.id }} — RaffineryWatch{% endblock %}
+{% block page_title %}
+  <i class="bi bi-bell-fill me-2" style="color:#ef4444"></i>
+  Alerte <span style="color:var(--green)">#{{ alerte.id }}</span>
+  — {{ alerte.code }}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .info-block { background: var(--card); border: 1px solid var(--border); border-radius:10px; padding:1.2rem; }
+  .info-block h3 { font-size:.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:1rem; }
+  .info-row { display:flex; justify-content:space-between; align-items:center; padding:.4rem 0; border-bottom:1px solid rgba(22,45,74,.4); }
+  .info-row:last-child { border-bottom:none; }
+  .info-label { font-size:.8rem; color:var(--muted); }
+  .info-value { font-size:.88rem; color:var(--text); font-weight:600; text-align:right; max-width:60%; }
+  .badge-ia  { background:#2563eb; color:#fff; padding:2px 8px; border-radius:4px; font-size:.72rem; font-weight:600; }
+  .badge-lstm{ background:#7c3aed; color:#fff; padding:2px 8px; border-radius:4px; font-size:.72rem; font-weight:600; }
+  .prio-critique { color:#ef4444; }
+  .prio-haute     { color:#f97316; }
+  .prio-moyenne   { color:#eab308; }
+  .prio-basse     { color:var(--blue-l); }
+  .msg-box { background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:1rem; font-size:.88rem; line-height:1.6; color:var(--text); word-break:break-word; }
+  .mesure-bar { height:6px; border-radius:3px; background:var(--border); overflow:hidden; margin-top:3px; }
+  .mesure-fill { height:100%; border-radius:3px; background:var(--green); }
+  .mesure-fill.anomalie { background:#ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not alerte %}
+  <div class="alert-banner alert-danger"><i class="bi bi-exclamation-circle"></i> Alerte introuvable.</div>
+{% else %}
+
+<!-- Bandeau haut -->
+<div class="rw-card mb-3" style="border-left:4px solid {% if alerte.priorite == 'critique' %}#ef4444{% elif alerte.priorite == 'haute' %}#f97316{% elif alerte.priorite == 'moyenne' %}#eab308{% else %}var(--blue-l){% endif %}">
+  <div class="rw-card-body" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div>
+      {% if alerte.is_lstm %}
+        <span class="badge-lstm">🧠 LSTM</span>
+      {% elif alerte.is_if %}
+        <span class="badge-ia">🤖 Isolation Forest</span>
+      {% endif %}
+      <span class="badge-rw badge-{{ alerte.priorite }} ms-1">{{ alerte.priorite|upper }}</span>
+    </div>
+    <div class="msg-box" style="flex:1">{{ alerte.message }}</div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      {% if alerte.statut == 'ouverte' %}
+        <span style="color:#ef4444;font-weight:700;font-size:.85rem">● Ouverte</span>
+        <form method="POST" action="{% url 'acquitter' alerte.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-green" style="padding:.35rem .85rem;font-size:.82rem">
+            <i class="bi bi-check-lg me-1"></i>Acquitter
+          </button>
+        </form>
+      {% else %}
+        <span style="color:var(--green);font-weight:700;font-size:.85rem">✓ Acquittée</span>
+      {% endif %}
+      <a href="{% url 'alertes' %}" class="btn-ghost"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+    </div>
+  </div>
+</div>
+
+<div class="detail-grid mb-3">
+
+  <!-- Infos capteur -->
+  <div class="info-block">
+    <h3><i class="bi bi-broadcast me-1"></i>Capteur concerné</h3>
+    <div class="info-row">
+      <span class="info-label">Code</span>
+      <span class="info-value"><code style="color:var(--green)">{{ alerte.code }}</code></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Type</span>
+      <span class="info-value">{{ alerte.type }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Zone</span>
+      <span class="info-value">{{ alerte.zone|default:"—" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Valeur déclenchante</span>
+      <span class="info-value" style="color:#ef4444;font-size:1.1rem">
+        {{ alerte.valeur|default:"—" }} {{ alerte.unite }}
+      </span>
+    </div>
+    {% if alerte.seuil_min is not None %}
+    <div class="info-row">
+      <span class="info-label">Seuils configurés</span>
+      <span class="info-value">{{ alerte.seuil_min }} → {{ alerte.seuil_max }} {{ alerte.unite }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Infos alerte -->
+  <div class="info-block">
+    <h3><i class="bi bi-clock-history me-1"></i>Détails de l'alerte</h3>
+    <div class="info-row">
+      <span class="info-label">ID</span>
+      <span class="info-value">#{{ alerte.id }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Priorité</span>
+      <span class="info-value prio-{{ alerte.priorite }}">{{ alerte.priorite|upper }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Statut</span>
+      <span class="info-value">{{ alerte.statut }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Créée le</span>
+      <span class="info-value">{{ alerte.created_at }}</span>
+    </div>
+    {% if alerte.acquittee_at %}
+    <div class="info-row">
+      <span class="info-label">Acquittée le</span>
+      <span class="info-value" style="color:var(--green)">{{ alerte.acquittee_at }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+      <span class="info-label">Source IA</span>
+      <span class="info-value">
+        {% if alerte.is_lstm %}🧠 LSTM Autoencoder{% elif alerte.is_if %}🤖 Isolation Forest{% else %}Règle manuelle{% endif %}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Mesures autour de l'alerte -->
+{% if mesures_voisines %}
+<div class="rw-card mb-3">
+  <div class="rw-card-header"><i class="bi bi-graph-up me-1"></i>Mesures du capteur autour de l'alerte (±2 min)</div>
+  <div class="rw-card-body p-0">
+    <table class="rw-table">
+      <thead>
+        <tr><th>Heure</th><th>Valeur</th><th>Visualisation</th></tr>
+      </thead>
+      <tbody>
+        {% for m in mesures_voisines %}
+        <tr>
+          <td style="font-size:.8rem;color:var(--muted)">{{ m.1 }}</td>
+          <td style="font-weight:700;color:{% if alerte.seuil_max and m.0 > alerte.seuil_max %}#ef4444{% elif alerte.seuil_min and m.0 < alerte.seuil_min %}#f97316{% else %}var(--green){% endif %}">
+            {{ m.0 }} {{ alerte.unite }}
+          </td>
+          <td style="width:40%">
+            <div class="mesure-bar">
+              <div class="mesure-fill {% if alerte.seuil_max and m.0 > alerte.seuil_max %}anomalie{% endif %}"
+                   style="width:{% widthratio m.0 alerte.seuil_max|default:100 100 %}%"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Autres alertes du même capteur -->
+{% if autres_alertes %}
+<div class="rw-card">
+  <div class="rw-card-header"><i class="bi bi-clock-history me-1"></i>Autres alertes de <code style="color:var(--green)">{{ alerte.code }}</code></div>
+  <div class="rw-card-body p-0">
+    <table class="rw-table">
+      <thead><tr><th>#</th><th>Message</th><th>Priorité</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        {% for a in autres_alertes %}
+        <tr>
+          <td><small class="text-muted">{{ a.0 }}</small></td>
+          <td><small>
+            {% if "[IA - LSTM]" in a.1 %}<span class="badge-lstm me-1">🧠 LSTM</span>
+            {% elif "[IA - Isolation Forest]" in a.1 %}<span class="badge-ia me-1">🤖 IA</span>{% endif %}
+            {{ a.1|truncatechars:60 }}
+          </small></td>
+          <td><span class="prio-{{ a.2 }}" style="font-size:.8rem;font-weight:700">{{ a.2|upper }}</span></td>
+          <td><small class="text-muted">{{ a.3 }}</small></td>
+          <td><a href="{% url 'alerte_detail' a.0 %}" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem">Voir</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

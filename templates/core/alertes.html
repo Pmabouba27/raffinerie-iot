@@ -39,7 +39,14 @@
             <td><code style="color:var(--rw-green)">{{ a.1 }}</code></td>
             <td><small>{{ a.2|default:"—" }}</small></td>
             <td><small>{{ a.3 }}</small></td>
-            <td><small>{{ a.4|truncatechars:70 }}</small></td>
+            <td>
+              {% if "[IA - LSTM]" in a.4 %}
+                <span class="badge me-1" style="background:#7c3aed;font-size:.65rem">🧠 LSTM</span>
+              {% elif "[IA - Isolation Forest]" in a.4 %}
+                <span class="badge me-1" style="background:#2563eb;font-size:.65rem">🤖 IA</span>
+              {% endif %}
+              <small>{{ a.4|truncatechars:70 }}</small>
+            </td>
             <td><span class="badge badge-{{ a.5 }}">{{ a.5 }}</span></td>
             <td>
               {% if a.6 == 'ouverte' %}
@@ -49,16 +56,19 @@
               {% endif %}
             </td>
             <td><small class="text-muted">{{ a.7|default:"—" }}</small></td>
-            <td>
+            <td style="white-space:nowrap">
+              <a href="{% url 'alerte_detail' a.0 %}" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem" title="Détails">
+                <i class="bi bi-eye"></i>
+              </a>
               {% if a.6 == 'ouverte' %}
-              <form method="POST" action="{% url 'acquitter' a.0 %}">
+              <form method="POST" action="{% url 'acquitter' a.0 %}" style="display:inline">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2" title="Acquitter">
+                <button type="submit" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem;color:var(--green);border-color:rgba(0,230,118,.3)" title="Acquitter">
                   <i class="bi bi-check-lg"></i>
                 </button>
               </form>
               {% else %}
-              <i class="bi bi-check-all text-muted"></i>
+              <i class="bi bi-check-all text-muted ms-1"></i>
               {% endif %}
             </td>
           </tr>

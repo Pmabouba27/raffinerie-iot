@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Utilisateurs — Gestion{% endblock %}
+{% block page_title %}<i class="bi bi-people me-2" style="color:#ef4444"></i>Gestion des utilisateurs{% endblock %}
+{% block extra_head %}{% include "core/gestion/_form_styles.html" %}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+
+  <!-- ── Formulaire création ──────────────────────────── -->
+  <div class="col-md-4">
+    <div class="rw-card h-100">
+      <div class="rw-card-header" style="color:#ef4444"><i class="bi bi-person-plus"></i> Créer un compte</div>
+      <div class="rw-card-body">
+        <form method="POST" class="rw-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>{{ form.username.label }}</label>
+            {{ form.username }}{{ form.username.errors }}
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.first_name.label }}</label>{{ form.first_name }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.last_name.label }}</label>{{ form.last_name }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>{{ form.email.label }}</label>
+            {{ form.email }}{{ form.email.errors }}
+          </div>
+          <div class="form-group">
+            <label>{{ form.password.label }}</label>
+            {{ form.password }}{{ form.password.errors }}
+          </div>
+          <div class="form-group">
+            <label>{{ form.role.label }}</label>
+            {{ form.role }}
+          </div>
+          <div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:.6rem .8rem;font-size:.82rem;color:var(--muted)">
+            <i class="bi bi-info-circle me-1" style="color:#ef4444"></i>
+            <strong style="color:var(--text)">Administrateur</strong> : accès complet + section Gestion.<br>
+            <strong style="color:var(--text)">Opérateur</strong> : lecture seule, peut acquitter les alertes.
+          </div>
+          <button type="submit" class="btn-green" style="background:#b71c1c">
+            <i class="bi bi-person-plus me-1"></i>Créer le compte
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Liste utilisateurs ──────────────────────────── -->
+  <div class="col-md-8">
+    <div class="rw-card">
+      <div class="rw-card-header" style="color:#ef4444">
+        <i class="bi bi-people"></i> Comptes enregistrés
+        <span style="margin-left:auto;font-weight:400;font-size:.75rem;color:var(--muted)">{{ utilisateurs|length }} compte(s)</span>
+      </div>
+      <div class="rw-card-body p-0">
+        <table class="rw-table">
+          <thead>
+            <tr><th>Identifiant</th><th>Nom complet</th><th>Email</th><th>Rôle</th><th>Dernière connexion</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for u in utilisateurs %}
+            <tr>
+              <td>
+                <strong style="color:var(--text)">{{ u.username }}</strong>
+                {% if u == request.user %}<span style="font-size:.7rem;color:var(--green);margin-left:.4rem">(vous)</span>{% endif %}
+              </td>
+              <td style="font-size:.85rem">{{ u.get_full_name|default:"—" }}</td>
+              <td style="font-size:.82rem;color:var(--muted)">{{ u.email|default:"—" }}</td>
+              <td>
+                {% if u.is_superuser %}
+                  <span style="color:#f97316;font-weight:600;font-size:.8rem">Super-admin</span>
+                {% elif u.is_staff %}
+                  <span style="color:#ef4444;font-weight:600;font-size:.8rem">Administrateur</span>
+                {% else %}
+                  <span style="color:var(--muted);font-size:.8rem">Opérateur</span>
+                {% endif %}
+              </td>
+              <td style="font-size:.78rem;color:var(--muted)">
+                {{ u.last_login|date:"d/m/Y H:i"|default:"Jamais" }}
+              </td>
+              <td style="white-space:nowrap">
+                <a href="{% url 'gestion_utilisateur_edit' u.pk %}" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% if u != request.user and not u.is_superuser %}
+                <form method="POST" action="{% url 'gestion_utilisateur_delete' u.pk %}" style="display:inline"
+                      onsubmit="return confirm('Supprimer le compte {{ u.username }} ?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem;color:#ef4444;border-color:rgba(239,68,68,.3)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Aucun compte trouvé.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

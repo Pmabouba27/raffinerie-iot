@@ -153,20 +153,20 @@ class CapteurAdmin(admin.ModelAdmin):
 
 # ── Règle d'alerte ────────────────────────────────────────────────────────────
 def activer_regles(modeladmin, request, queryset):
-    queryset.update(active=True)
+    queryset.update(actif=True)
 activer_regles.short_description = "✅ Activer les règles sélectionnées"
 
 def desactiver_regles(modeladmin, request, queryset):
-    queryset.update(active=False)
+    queryset.update(actif=False)
 desactiver_regles.short_description = "⏸️ Désactiver les règles sélectionnées"
 
 
 @admin.register(RegleAlerte)
 class RegleAlerteAdmin(admin.ModelAdmin):
-    list_display  = ('id', 'capteur', 'condition', 'seuil', 'priorite_badge', 'active_badge', 'message')
-    list_filter   = ('priorite', 'active', 'condition')
-    list_editable = ('seuil',)
-    search_fields = ('capteur__code', 'message')
+    list_display  = ('id', 'capteur', 'type_regle', 'valeur_seuil', 'priorite_badge', 'actif_badge', 'description')
+    list_filter   = ('priorite', 'actif', 'type_regle')
+    list_editable = ('valeur_seuil',)
+    search_fields = ('capteur__code', 'description', 'nom')
     list_per_page = 25
     actions       = [activer_regles, desactiver_regles, export_csv]
 
@@ -176,11 +176,11 @@ class RegleAlerteAdmin(admin.ModelAdmin):
         return format_html('<span style="color:{};font-weight:600">{}</span>', color, obj.priorite.upper())
     priorite_badge.short_description = "Priorité"
 
-    def active_badge(self, obj):
-        if obj.active:
+    def actif_badge(self, obj):
+        if obj.actif:
             return format_html('<span style="color:#00e676">● Actif</span>')
         return format_html('<span style="color:#5a8fb0">○ Inactif</span>')
-    active_badge.short_description = "Active"
+    actif_badge.short_description = "Active"
 
     class Media:
         css = {'all': ('admin/css/custom.css',)}
@@ -188,11 +188,16 @@ class RegleAlerteAdmin(admin.ModelAdmin):
 
 # ── Alertes ───────────────────────────────────────────────────────────────────
 def acquitter_alertes(modeladmin, request, queryset):
-    queryset.filter(statut='ouverte').update(
-        statut='acquittee',
-        acquitte_at='NOW()',
-        acquitte_par=request.user.id if request.user.id else 1
-    )
+    """Acquittement en masse via SQL brut (noms de colonnes corrects)."""
+    ids = list(queryset.filter(statut='ouverte').values_list('id', flat=True))
+    if ids:
+        placeholders = ','.join(['%s'] * len(ids))
+        with connection.cursor() as cur:
+            cur.execute(
+                f"UPDATE alertes SET statut='acquittee', timestamp_acquittement=NOW() "
+                f"WHERE id IN ({placeholders}) AND statut='ouverte'",
+                ids,
+            )
 acquitter_alertes.short_description = "✔️ Acquitter les alertes sélectionnées"
 
 def exporter_alertes_csv(modeladmin, request, queryset):
@@ -212,7 +217,7 @@ class AlerteAdmin(admin.ModelAdmin):
     list_display    = ('id', 'capteur_code', 'priorite_badge', 'statut_badge', 'message_court', 'created_at')
     list_filter     = ('statut', 'priorite', 'capteur__zone')
     search_fields   = ('message', 'capteur__code')
-    readonly_fields = ('created_at', 'acquitte_at', 'capteur', 'regle', 'valeur', 'message', 'priorite')
+    readonly_fields = ('created_at', 'capteur', 'regle', 'message', 'priorite')
     list_per_page   = 30
     actions         = [acquitter_alertes, exporter_alertes_csv]
     date_hierarchy  = 'created_at'

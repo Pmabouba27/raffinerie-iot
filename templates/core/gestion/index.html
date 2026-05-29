@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Gestion — RaffineryWatch{% endblock %}
+{% block page_title %}<i class="bi bi-gear me-2" style="color:var(--green)"></i>Gestion{% endblock %}
+
+{% block extra_head %}
+<style>
+  .gestion-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    display: block;
+    transition: all .2s;
+    border-top: 3px solid var(--border);
+  }
+  .gestion-card:hover { border-top-color: var(--green); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,230,118,.1); }
+  .gestion-card.orange:hover { border-top-color: #f97316; box-shadow: 0 4px 20px rgba(249,115,22,.1); }
+  .gestion-card.blue:hover   { border-top-color: var(--blue-l); box-shadow: 0 4px 20px rgba(21,101,192,.15); }
+  .gestion-card.red:hover    { border-top-color: #ef4444; box-shadow: 0 4px 20px rgba(239,68,68,.1); }
+  .gestion-icon { font-size: 2rem; margin-bottom: .75rem; }
+  .gestion-stat { font-size: 2rem; font-weight: 800; color: var(--green); line-height: 1; }
+  .gestion-card.orange .gestion-stat { color: #f97316; }
+  .gestion-card.blue   .gestion-stat { color: var(--blue-l); }
+  .gestion-card.red    .gestion-stat { color: #ef4444; }
+  .gestion-title { font-weight: 700; font-size: 1rem; color: var(--text); margin: .25rem 0 .4rem; }
+  .gestion-desc  { font-size: .82rem; color: var(--muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:0 auto">
+
+<p style="color:var(--muted);margin-bottom:1.5rem">
+  Gérez les capteurs, zones et règles d'alerte directement depuis cette interface.
+  Tout ce que vous modifiez ici est immédiatement répercuté sur la plateforme.
+</p>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <a href="{% url 'gestion_capteurs' %}" class="gestion-card">
+      <div class="gestion-icon"><i class="bi bi-broadcast" style="color:var(--green)"></i></div>
+      <div class="gestion-stat">{{ stats.capteurs|default:"—" }}</div>
+      <div class="gestion-title">Capteurs</div>
+      <div class="gestion-desc">Ajouter, modifier, désactiver des capteurs IoT. Configurer les seuils d'alerte.</div>
+      <div style="margin-top:1rem;font-size:.8rem;color:var(--green)">Gérer les capteurs →</div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'gestion_zones' %}" class="gestion-card blue">
+      <div class="gestion-icon"><i class="bi bi-map" style="color:var(--blue-l)"></i></div>
+      <div class="gestion-stat" style="color:var(--blue-l)">{{ stats.zones|default:"—" }}</div>
+      <div class="gestion-title">Zones</div>
+      <div class="gestion-desc">Créer et modifier les zones géographiques de la raffinerie.</div>
+      <div style="margin-top:1rem;font-size:.8rem;color:var(--blue-l)">Gérer les zones →</div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'gestion_regles' %}" class="gestion-card orange">
+      <div class="gestion-icon"><i class="bi bi-sliders2" style="color:#f97316"></i></div>
+      <div class="gestion-stat">{{ stats.regles|default:"—" }}</div>
+      <div class="gestion-title">Règles d'alerte</div>
+      <div class="gestion-desc">Définir les conditions de déclenchement des alertes pour chaque capteur.</div>
+      <div style="margin-top:1rem;font-size:.8rem;color:#f97316">Gérer les règles →</div>
+    </a>
+  </div>
+  {% if user.is_staff %}
+  <div class="col-md-4">
+    <a href="{% url 'gestion_utilisateurs' %}" class="gestion-card red">
+      <div class="gestion-icon"><i class="bi bi-people" style="color:#ef4444"></i></div>
+      <div class="gestion-stat" style="color:#ef4444">{{ stats.utilisateurs|default:"—" }}</div>
+      <div class="gestion-title">Utilisateurs</div>
+      <div class="gestion-desc">Créer des comptes, définir les rôles (admin / opérateur) et réinitialiser les mots de passe.</div>
+      <div style="margin-top:1rem;font-size:.8rem;color:#ef4444">Gérer les utilisateurs →</div>
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+</div>
+{% endblock %}

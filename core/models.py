@@ -74,12 +74,22 @@ class Capteur(models.Model):
 
 class RegleAlerte(models.Model):
     PRIORITE = [('critique','Critique'),('haute','Haute'),('moyenne','Moyenne'),('basse','Basse')]
-    capteur   = models.ForeignKey(Capteur, on_delete=models.CASCADE, db_column='capteur_id')
-    condition = models.CharField(max_length=20)
-    seuil     = models.FloatField()
-    priorite  = models.CharField(max_length=20, choices=PRIORITE)
-    message   = models.TextField()
-    active    = models.BooleanField(default=True)
+    TYPE_REGLE = [
+        ('seuil_haut',      'Valeur > seuil (trop haute)'),
+        ('seuil_bas',       'Valeur < seuil (trop basse)'),
+        ('valeur_nulle',    'Valeur nulle / capteur muet'),
+        ('derive_anormale', 'Dérive anormale'),
+    ]
+    nom          = models.CharField(max_length=150, default='Règle')
+    capteur      = models.ForeignKey(
+                       Capteur, on_delete=models.CASCADE,
+                       null=True, blank=True, db_column='capteur_id')
+    type_regle   = models.CharField(max_length=30, choices=TYPE_REGLE,
+                       db_column='type_regle', default='seuil_haut')
+    valeur_seuil = models.FloatField(null=True, blank=True, db_column='valeur_seuil')
+    priorite     = models.CharField(max_length=20, choices=PRIORITE, default='moyenne')
+    actif        = models.BooleanField(default=True, db_column='actif')
+    description  = models.TextField(blank=True, null=True)
 
     class Meta:
         managed  = False
@@ -88,21 +98,21 @@ class RegleAlerte(models.Model):
         verbose_name_plural = "Règles d'alerte"
 
     def __str__(self):
-        return f"[{self.priorite}] {self.capteur}"
+        return f"[{self.priorite}] {self.capteur} — {self.type_regle}"
 
 
 class Alerte(models.Model):
-    STATUT   = [('ouverte','Ouverte'),('acquittee','Acquittée'),('fermee','Fermée')]
+    STATUT   = [('ouverte','Ouverte'),('acquittee','Acquittée'),('resolue','Résolue'),('fausse_alerte','Fausse alerte')]
     PRIORITE = [('critique','Critique'),('haute','Haute'),('moyenne','Moyenne'),('basse','Basse')]
 
-    capteur    = models.ForeignKey(Capteur, on_delete=models.CASCADE, db_column='capteur_id')
-    regle      = models.ForeignKey(RegleAlerte, on_delete=models.SET_NULL, null=True, db_column='regle_id')
-    valeur     = models.FloatField(null=True)
-    message    = models.TextField()
-    priorite   = models.CharField(max_length=20, choices=PRIORITE)
-    statut     = models.CharField(max_length=20, choices=STATUT, default='ouverte')
-    created_at = models.DateTimeField()
-    acquitte_at = models.DateTimeField(null=True, blank=True)
+    capteur                  = models.ForeignKey(Capteur, on_delete=models.CASCADE, db_column='capteur_id')
+    regle                    = models.ForeignKey(RegleAlerte, on_delete=models.SET_NULL, null=True, db_column='regle_id')
+    valeur                   = models.FloatField(null=True, db_column='valeur_declencheur')
+    message                  = models.TextField()
+    priorite                 = models.CharField(max_length=20, choices=PRIORITE)
+    statut                   = models.CharField(max_length=20, choices=STATUT, default='ouverte')
+    created_at               = models.DateTimeField()
+    timestamp_acquittement   = models.DateTimeField(null=True, blank=True, db_column='timestamp_acquittement')
 
     class Meta:
         managed  = False
@@ -112,14 +122,14 @@ class Alerte(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"[{self.priorite}] {self.capteur} — {self.statut}"
+        return f"[{self.priorite}] {self.capteur} -- {self.statut}"
 
 
 class Maintenance(models.Model):
     equipement       = models.ForeignKey(Equipement, on_delete=models.CASCADE, db_column='equipement_id')
     type_maintenance = models.CharField(max_length=50)
     statut           = models.CharField(max_length=20)
-    date_debut       = models.DateTimeField()
+    date_debut       = models.DateTimeField(null=True, blank=True)
     date_fin_prevue  = models.DateTimeField(null=True, blank=True)
     description      = models.TextField(blank=True)
 
@@ -130,4 +140,4 @@ class Maintenance(models.Model):
         verbose_name_plural = 'Maintenances'
 
     def __str__(self):
-        return f"Maintenance {self.equipement}"
+        return f'Maintenance {self.equipement}'

@@ -1,6 +1,11 @@
+import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, window, avg, expr, to_timestamp
 from pyspark.sql.types import StructType, StringType, FloatType, IntegerType
+
+MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY', 'minio')
+MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY', 'minio123')
+MINIO_ENDPOINT   = os.environ.get('MINIO_ENDPOINT',   'http://minio:9000')
 
 # 1. Définir le schéma attendu pour les messages JSON
 # Compatible avec le simulateur réaliste (6 types de capteurs)
@@ -19,9 +24,9 @@ schema = StructType() \
 # 2. Démarrer la session Spark
 spark = SparkSession.builder \
     .appName("raffinerie-iot") \
-    .config("spark.hadoop.fs.s3a.access.key", "minio") \
-    .config("spark.hadoop.fs.s3a.secret.key", "minio123") \
-    .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000") \
+    .config("spark.hadoop.fs.s3a.access.key", MINIO_ACCESS_KEY) \
+    .config("spark.hadoop.fs.s3a.secret.key", MINIO_SECRET_KEY) \
+    .config("spark.hadoop.fs.s3a.endpoint", MINIO_ENDPOINT) \
     .config("spark.hadoop.fs.s3a.path.style.access", "true") \
     .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
     .getOrCreate()

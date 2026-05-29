@@ -128,32 +128,55 @@
   </div>
 </div>
 
-<!-- Modèle Random Walk -->
+<!-- Modèle physique -->
 <div class="card mb-4">
-  <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Modèle de simulation — Random Walk avec inertie</div>
+  <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Modèle de simulation — Corrélations physiques réelles</div>
   <div class="card-body">
-    <div class="row g-3 mb-3">
+
+    <!-- Modes -->
+    <div class="row g-3 mb-4">
       <div class="col-md-4">
         <div class="p-3 rounded" style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2)">
           <h6 class="text-success"><i class="bi bi-circle-fill me-1" style="font-size:.6rem"></i>Normal</h6>
-          <p class="small text-muted mb-0">Fluctuations gaussiennes autour de la valeur nominale avec rappel (force ressort). Inertie : 0.88–0.97 selon le type.</p>
+          <p class="small text-muted mb-0">Fluctuations gaussiennes avec rappel élastique. Corrélations physiques actives : temp↑ → pression↑ (Gay-Lussac), cycle journalier ±8%.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="p-3 rounded" style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2)">
           <h6 style="color:#eab308"><i class="bi bi-circle-fill me-1" style="font-size:.6rem"></i>Dégradé</h6>
-          <p class="small text-muted mb-0">Dérive lente vers le seuil d'alerte. Probabilité 0.3%/tick. Corrélations zones activées (temp↑ → pression↑, débit↑).</p>
+          <p class="small text-muted mb-0">Pré-signature sur 5 ticks avant anomalie franche. Débit↓ → vibration↑ (cavitation). Niveau bas → chute de débit (pompe à vide).</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="p-3 rounded" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2)">
           <h6 class="text-danger"><i class="bi bi-circle-fill me-1" style="font-size:.6rem"></i>Anomalie</h6>
-          <p class="small text-muted mb-0">Pic brutal (3 ticks) / dérive hors plage / panne capteur (NULL). Probabilité 1%/tick depuis dégradé.</p>
+          <p class="small text-muted mb-0">Cascade de panne : panne pompe → chute débit + surchauffe aval + vibrations. Pic brutal / dérive hors plage / panne capteur.</p>
         </div>
       </div>
     </div>
-    <div class="p-2 rounded" style="background:#0d1117;font-family:monospace;font-size:.9rem;color:#94a3b8">
-      <span style="color:#f97316">valeur(t+1)</span> = valeur(t) × <span style="color:#22c55e">inertie</span> + (valeur(t) + <span style="color:#eab308">bruit</span> + <span style="color:#3b82f6">rappel</span>) × (1 − <span style="color:#22c55e">inertie</span>)
+
+    <!-- Lois physiques -->
+    <div class="mb-3"><small class="text-muted text-uppercase" style="letter-spacing:.05em">Lois physiques implémentées</small></div>
+    <div class="row g-2 mb-3">
+      {% for loi in lois_physiques %}
+      <div class="col-md-4">
+        <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:var(--rw-surface);border:1px solid var(--rw-border)">
+          <span style="font-size:1.2rem">{{ loi.icone }}</span>
+          <div>
+            <div class="small fw-bold" style="color:var(--rw-green)">{{ loi.nom }}</div>
+            <div class="small text-muted">{{ loi.desc }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Formule -->
+    <div class="p-2 rounded" style="background:#0d1117;font-family:monospace;font-size:.85rem;color:#94a3b8">
+      <span style="color:#f97316">valeur(t+1)</span> =
+      <span style="color:#94a3b8">inertie ×</span> valeur(t) +
+      (1 − inertie) × (valeur(t) + <span style="color:#eab308">bruit</span> + <span style="color:#3b82f6">rappel</span> + <span style="color:#22c55e">Δ_corrélation</span>)
+      <span class="ms-3" style="color:#475569">// Δ_corrélation = Gay-Lussac + cavitation + niveau→débit + T→H2S</span>
     </div>
   </div>
 </div>

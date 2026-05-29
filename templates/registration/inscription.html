@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inscription — RaffineryWatch</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #06101f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 1.5rem 0;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 80% 50%, rgba(0,230,118,.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 20%, rgba(13,71,161,.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .auth-wrapper { width: 100%; max-width: 500px; padding: 1.5rem; }
+
+    .auth-logo { text-align: center; margin-bottom: 2rem; }
+    .logo-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #0d47a1, #1565c0);
+      border-radius: 14px; font-size: 1.6rem;
+      box-shadow: 0 0 24px rgba(0,230,118,.2); margin-bottom: .75rem;
+    }
+    .logo-name  { display:block; color:#00e676; font-weight:800; font-size:1.4rem; letter-spacing:1px; text-shadow:0 0 20px rgba(0,230,118,.3); }
+    .logo-sub   { display:block; color:#4a7090; font-size:.8rem; margin-top:.2rem; }
+
+    .auth-card {
+      background: #0c1a2e; border: 1px solid #162d4a; border-radius: 16px;
+      padding: 2rem; box-shadow: 0 8px 40px rgba(0,0,0,.4);
+    }
+    .auth-card-title {
+      font-size: 1.1rem; font-weight: 700; color: #c8dff0;
+      margin-bottom: 1.5rem; display:flex; align-items:center; gap:.5rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block; font-size: .73rem; color: #4a7090;
+      text-transform: uppercase; letter-spacing: .8px; font-weight: 600; margin-bottom: .4rem;
+    }
+    .field input {
+      width: 100%; background: #06101f; border: 1px solid #162d4a;
+      border-radius: 8px; color: #c8dff0; padding: .65rem .9rem;
+      font-size: .93rem; transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus { outline:none; border-color:#00e676; box-shadow:0 0 0 3px rgba(0,230,118,.12); }
+    .field input::placeholder { color:#2a4a6a; }
+
+    /* Grille 2 colonnes */
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+
+    /* Erreurs inline */
+    .field-error { color:#fca5a5; font-size:.8rem; margin-top:.3rem; }
+    .error-global {
+      background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25);
+      border-radius:8px; color:#fca5a5; padding:.6rem .9rem;
+      font-size:.85rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:.5rem;
+    }
+
+    /* Indicateur force mot de passe */
+    .pwd-strength { display:flex; gap:4px; margin-top:.4rem; }
+    .pwd-bar { height:3px; flex:1; border-radius:2px; background:#162d4a; transition:background .2s; }
+
+    /* Rôle info */
+    .role-info {
+      background: rgba(0,230,118,.06); border:1px solid rgba(0,230,118,.15);
+      border-radius: 8px; padding: .7rem .9rem; font-size:.82rem; color:#4a7090;
+      margin-bottom: 1rem;
+    }
+    .role-info strong { color:#c8dff0; }
+
+    .btn-primary-auth {
+      width:100%; background:linear-gradient(90deg, #00c853, #00e676);
+      border:none; border-radius:9px; color:#000; font-weight:700;
+      font-size:.95rem; padding:.75rem; cursor:pointer; transition:all .15s;
+      display:flex; align-items:center; justify-content:center; gap:.5rem; margin-top:.5rem;
+    }
+    .btn-primary-auth:hover { transform:translateY(-1px); box-shadow:0 0 20px rgba(0,230,118,.3); }
+
+    .divider-text { text-align:center; position:relative; margin:1.25rem 0; }
+    .divider-text::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:#162d4a; }
+    .divider-text span { position:relative; background:#0c1a2e; padding:0 .75rem; font-size:.78rem; color:#4a7090; }
+
+    .auth-switch { text-align:center; font-size:.85rem; color:#4a7090; }
+    .auth-switch a { color:#00e676; text-decoration:none; font-weight:600; }
+    .auth-switch a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+<div class="auth-wrapper">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <div class="logo-icon"><i class="bi bi-activity" style="color:#00e676"></i></div>
+    <span class="logo-name">RaffineryWatch</span>
+    <span class="logo-sub">Surveillance IoT Industrielle</span>
+  </div>
+
+  <!-- Card inscription -->
+  <div class="auth-card">
+    <div class="auth-card-title">
+      <i class="bi bi-person-plus" style="color:#00e676"></i>
+      Créer un compte
+    </div>
+
+    <!-- Erreurs globales -->
+    {% if form.non_field_errors %}
+    <div class="error-global">
+      <i class="bi bi-exclamation-triangle"></i>
+      {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Info rôle -->
+    <div class="role-info">
+      <i class="bi bi-info-circle me-1" style="color:#00e676"></i>
+      Votre compte sera créé avec le rôle <strong>Opérateur</strong>.
+      Un administrateur pourra vous attribuer des droits supplémentaires.
+    </div>
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <!-- Identifiant -->
+      <div class="field">
+        <label>Identifiant *</label>
+        <input type="text" name="username" value="{{ form.username.value|default:'' }}"
+               placeholder="jean.dupont" required autofocus>
+        {% if form.username.errors %}<div class="field-error"><i class="bi bi-exclamation-circle me-1"></i>{{ form.username.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Prénom / Nom -->
+      <div class="field-row">
+        <div class="field">
+          <label>Prénom *</label>
+          <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" placeholder="Jean" required>
+          {% if form.first_name.errors %}<div class="field-error">{{ form.first_name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="field">
+          <label>Nom *</label>
+          <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" placeholder="Dupont" required>
+          {% if form.last_name.errors %}<div class="field-error">{{ form.last_name.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="field">
+        <label>Adresse email *</label>
+        <input type="email" name="email" value="{{ form.email.value|default:'' }}"
+               placeholder="jean@raffinerie.local" required>
+        {% if form.email.errors %}<div class="field-error">{{ form.email.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Mots de passe -->
+      <div class="field-row">
+        <div class="field">
+          <label>Mot de passe *</label>
+          <input type="password" name="password1" id="pwd1" placeholder="Min. 8 caractères"
+                 required oninput="checkPwd(this.value)">
+          <div class="pwd-strength">
+            <div class="pwd-bar" id="bar1"></div>
+            <div class="pwd-bar" id="bar2"></div>
+            <div class="pwd-bar" id="bar3"></div>
+            <div class="pwd-bar" id="bar4"></div>
+          </div>
+          {% if form.password1.errors %}<div class="field-error">{{ form.password1.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="field">
+          <label>Confirmer *</label>
+          <input type="password" name="password2" placeholder="Répétez le mot de passe" required>
+          {% if form.password2.errors %}<div class="field-error">{{ form.password2.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary-auth">
+        <i class="bi bi-person-check"></i> Créer mon compte
+      </button>
+    </form>
+
+    <div class="divider-text"><span>Déjà inscrit ?</span></div>
+    <div class="auth-switch">
+      <a href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right me-1"></i>Se connecter</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function checkPwd(val) {
+  const bars  = [1,2,3,4].map(i => document.getElementById('bar'+i));
+  const colors = ['#ef4444','#f97316','#eab308','#00e676'];
+  let score = 0;
+  if (val.length >= 8)  score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  bars.forEach((b, i) => {
+    b.style.background = i < score ? colors[score - 1] : '#162d4a';
+  });
+}
+</script>
+</body>
+</html>

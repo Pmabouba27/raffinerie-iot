@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Capteurs — Gestion{% endblock %}
+{% block page_title %}<i class="bi bi-broadcast me-2" style="color:var(--green)"></i>Gestion des capteurs{% endblock %}
+{% block extra_head %}{% include "core/gestion/_form_styles.html" %}{% endblock %}
+
+{% block content %}
+<div style="max-width:1100px;margin:0 auto">
+<div class="row g-3">
+
+  <!-- ── Formulaire ajout ─────────────────────────────── -->
+  <div class="col-md-4">
+    <div class="rw-card h-100">
+      <div class="rw-card-header"><i class="bi bi-plus-circle"></i> Ajouter un capteur</div>
+      <div class="rw-card-body">
+        <form method="POST" class="rw-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>{{ form.nom.label }}</label>
+            {{ form.nom }}
+            {{ form.nom.errors }}
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.type_capteur.label }}</label>
+              {{ form.type_capteur }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.statut.label }}</label>
+              {{ form.statut }}
+            </div>
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.zone.label }}</label>
+              {{ form.zone }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.equipement.label }}</label>
+              {{ form.equipement }}
+            </div>
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.seuil_min.label }}</label>
+              {{ form.seuil_min }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.seuil_max.label }}</label>
+              {{ form.seuil_max }}
+            </div>
+          </div>
+          {% if form.non_field_errors %}
+            <div style="color:#ef4444;font-size:.85rem">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <button type="submit" class="btn-green" style="margin-top:.5rem">
+            <i class="bi bi-plus-lg me-1"></i>Créer le capteur
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Liste des capteurs ───────────────────────────── -->
+  <div class="col-md-8">
+    <div class="rw-card">
+      <div class="rw-card-header">
+        <i class="bi bi-list-ul"></i> Capteurs enregistrés
+        <span style="margin-left:auto;font-weight:400;font-size:.75rem;color:var(--muted)">{{ capteurs|length }} capteur(s)</span>
+      </div>
+      <div class="rw-card-body p-0">
+        <div style="overflow-x:auto">
+          <table class="rw-table">
+            <thead>
+              <tr>
+                <th>Code</th><th>Nom</th><th>Type</th><th>Zone</th>
+                <th>Statut</th><th>Seuils</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in capteurs %}
+              <tr>
+                <td><code style="color:var(--green);font-size:.8rem">{{ c.code }}</code></td>
+                <td>{{ c.nom }}</td>
+                <td><span style="font-size:.8rem;color:var(--muted)">{{ c.type_capteur.nom }}</span></td>
+                <td><span style="font-size:.8rem">{{ c.zone.nom|default:"—" }}</span></td>
+                <td>
+                  {% if c.statut == 'actif' %}
+                    <span style="color:var(--green);font-weight:600;font-size:.8rem">● Actif</span>
+                  {% elif c.statut == 'inactif' %}
+                    <span style="color:var(--muted);font-size:.8rem">○ Inactif</span>
+                  {% else %}
+                    <span style="color:#ef4444;font-weight:600;font-size:.8rem">● En panne</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:.8rem;color:var(--muted)">
+                  {% if c.seuil_min is not None %}{{ c.seuil_min }} / {{ c.seuil_max }}{% else %}—{% endif %}
+                </td>
+                <td style="white-space:nowrap">
+                  <a href="{% url 'gestion_capteur_edit' c.pk %}" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form method="POST" action="{% url 'gestion_capteur_delete' c.pk %}" style="display:inline"
+                        onsubmit="return confirm('Supprimer le capteur {{ c.nom }} ?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem;color:#ef4444;border-color:rgba(239,68,68,.3)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">
+                Aucun capteur. Créez-en un avec le formulaire.
+              </td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}

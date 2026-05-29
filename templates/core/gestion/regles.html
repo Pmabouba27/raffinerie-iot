@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Règles d'alerte — Gestion{% endblock %}
+{% block page_title %}<i class="bi bi-sliders2 me-2" style="color:#f97316"></i>Règles d'alerte{% endblock %}
+{% block extra_head %}{% include "core/gestion/_form_styles.html" %}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="rw-card h-100">
+      <div class="rw-card-header" style="color:#f97316"><i class="bi bi-plus-circle"></i> Nouvelle règle</div>
+      <div class="rw-card-body">
+        <form method="POST" class="rw-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>{{ form.capteur.label }}</label>{{ form.capteur }}
+          </div>
+          <div class="rw-form-row cols-2">
+            <div class="form-group">
+              <label>{{ form.type_regle.label }}</label>{{ form.type_regle }}
+            </div>
+            <div class="form-group">
+              <label>{{ form.valeur_seuil.label }}</label>{{ form.valeur_seuil }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>{{ form.priorite.label }}</label>{{ form.priorite }}
+          </div>
+          <div class="form-group">
+            <label>{{ form.description.label }}</label>{{ form.description }}
+          </div>
+          <div class="checkbox-row">
+            {{ form.actif }}
+            <label style="color:var(--text);font-size:.9rem;text-transform:none;letter-spacing:0">Règle active</label>
+          </div>
+          <button type="submit" class="btn-green" style="background:#c2410c;margin-top:.5rem">
+            <i class="bi bi-plus-lg me-1"></i>Créer la règle
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="rw-card">
+      <div class="rw-card-header" style="color:#f97316">
+        <i class="bi bi-sliders2"></i> Règles configurées
+        <span style="margin-left:auto;font-weight:400;font-size:.75rem;color:var(--muted)">{{ regles|length }} règle(s)</span>
+      </div>
+      <div class="rw-card-body p-0">
+        <table class="rw-table">
+          <thead>
+            <tr><th>Capteur</th><th>Type de règle</th><th>Seuil</th><th>Priorité</th><th>Description</th><th>Active</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for r in regles %}
+            <tr>
+              <td><code style="color:var(--green);font-size:.8rem">{{ r.capteur.code|default:"—" }}</code></td>
+              <td style="font-size:.8rem;color:var(--text)">{{ r.get_type_regle_display }}</td>
+              <td style="font-size:.8rem;font-family:monospace;color:#eab308">
+                {{ r.valeur_seuil|default:"—" }}
+              </td>
+              <td>
+                <span class="badge-rw badge-{{ r.priorite }}">{{ r.priorite }}</span>
+              </td>
+              <td style="font-size:.8rem;color:var(--muted)">{{ r.description|default:"—"|truncatechars:40 }}</td>
+              <td>
+                <form method="POST" action="{% url 'gestion_regle_toggle' r.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" style="background:none;border:none;cursor:pointer;padding:0">
+                    {% if r.actif %}
+                      <span style="color:var(--green);font-size:.85rem;font-weight:600">● Oui</span>
+                    {% else %}
+                      <span style="color:var(--muted);font-size:.85rem">○ Non</span>
+                    {% endif %}
+                  </button>
+                </form>
+              </td>
+              <td>
+                <form method="POST" action="{% url 'gestion_regle_delete' r.pk %}" style="display:inline"
+                      onsubmit="return confirm('Supprimer cette règle ?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-ghost" style="font-size:.75rem;padding:.2rem .6rem;color:#ef4444;border-color:rgba(239,68,68,.3)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Aucune règle définie.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

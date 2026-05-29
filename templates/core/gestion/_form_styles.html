@@ -1,0 +1,26 @@
+{% comment %}Styles partagés entre tous les formulaires de gestion{% endcomment %}
+<style>
+  .rw-form { display:flex; flex-direction:column; gap:.75rem; }
+  .rw-form-row { display:grid; gap:.75rem; }
+  .rw-form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .rw-form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display:flex; flex-direction:column; gap:.3rem; }
+  .form-group label { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  .rw-input {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    padding: .5rem .75rem;
+    font-size: .9rem;
+    width: 100%;
+    transition: border-color .15s;
+  }
+  .rw-input:focus { outline:none; border-color: var(--green); box-shadow: 0 0 0 2px rgba(0,230,118,.12); }
+  select.rw-input option { background: var(--card2); color: var(--text); }
+  textarea.rw-input { resize: vertical; }
+  .errorlist { list-style:none; padding:0; margin:.25rem 0 0; }
+  .errorlist li { color:#ef4444; font-size:.82rem; }
+  .checkbox-row { display:flex; align-items:center; gap:.5rem; }
+  .rw-checkbox { accent-color: var(--green); width:16px; height:16px; cursor:pointer; }
+</style>

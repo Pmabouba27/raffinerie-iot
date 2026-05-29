@@ -1,51 +1,251 @@
 <!DOCTYPE html>
-<html lang="fr" data-bs-theme="dark">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Connexion — RaffineryWatch</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    body { background: linear-gradient(135deg, #060d1a 0%, #0a1628 50%, #060d1a 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; }
-    .login-card { background:#0d1b2a; border:1px solid #1a3a5c; border-radius:16px; padding:2.5rem; width:100%; max-width:420px; box-shadow: 0 0 40px rgba(0,230,118,.08); }
-    .login-logo { color:#00e676; font-size:2.8rem; text-align:center; margin-bottom:.5rem; text-shadow: 0 0 20px rgba(0,230,118,.5); }
-    .login-title { color:#00e676; font-weight:700; font-size:1.5rem; text-align:center; letter-spacing:2px; }
-    .login-sub { color:#5a8fb0; text-align:center; font-size:.85rem; margin-bottom:2rem; }
-    .form-control { background:#060d1a; border-color:#1a3a5c; color:#cce8f4; }
-    .form-control:focus { background:#060d1a; border-color:#00e676; color:#cce8f4; box-shadow:0 0 0 .2rem rgba(0,230,118,.2); }
-    .form-label { color:#8ecae6; font-size:.85rem; }
-    .btn-login { background:linear-gradient(90deg, #0d47a1, #1565c0); border:none; color:#fff; font-weight:700; width:100%; padding:.75rem; letter-spacing:.5px; }
-    .btn-login:hover { background:linear-gradient(90deg, #1565c0, #1976d2); color:#fff; box-shadow: 0 0 15px rgba(21,101,192,.4); }
-    .divider { border-color:#1a3a5c; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #06101f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Fond animé */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(0,230,118,.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(13,71,161,.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 440px;
+      padding: 1.5rem;
+    }
+
+    /* Logo */
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .logo-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #0d47a1, #1565c0);
+      border-radius: 14px;
+      font-size: 1.6rem;
+      box-shadow: 0 0 24px rgba(0,230,118,.2);
+      margin-bottom: .75rem;
+    }
+    .logo-name {
+      display: block;
+      color: #00e676;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      text-shadow: 0 0 20px rgba(0,230,118,.3);
+    }
+    .logo-sub {
+      display: block;
+      color: #4a7090;
+      font-size: .8rem;
+      margin-top: .2rem;
+    }
+
+    /* Card */
+    .auth-card {
+      background: #0c1a2e;
+      border: 1px solid #162d4a;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 40px rgba(0,0,0,.4);
+    }
+    .auth-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c8dff0;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    /* Formulaire */
+    .field { margin-bottom: 1.1rem; }
+    .field label {
+      display: block;
+      font-size: .75rem;
+      color: #4a7090;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      font-weight: 600;
+      margin-bottom: .4rem;
+    }
+    .field input {
+      width: 100%;
+      background: #06101f;
+      border: 1px solid #162d4a;
+      border-radius: 8px;
+      color: #c8dff0;
+      padding: .65rem .9rem;
+      font-size: .95rem;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #00e676;
+      box-shadow: 0 0 0 3px rgba(0,230,118,.12);
+    }
+    .field input::placeholder { color: #2a4a6a; }
+
+    .error-msg {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: 8px;
+      color: #fca5a5;
+      padding: .6rem .9rem;
+      font-size: .85rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    /* Bouton principal */
+    .btn-primary-auth {
+      width: 100%;
+      background: linear-gradient(90deg, #0d47a1, #1565c0);
+      border: none;
+      border-radius: 9px;
+      color: #fff;
+      font-weight: 700;
+      font-size: .95rem;
+      padding: .75rem;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .btn-primary-auth:hover {
+      background: linear-gradient(90deg, #1565c0, #1976d2);
+      box-shadow: 0 0 20px rgba(21,101,192,.35);
+      transform: translateY(-1px);
+    }
+
+    /* Lien vers l'autre page */
+    .auth-switch {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: .85rem;
+      color: #4a7090;
+    }
+    .auth-switch a {
+      color: #00e676;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .auth-switch a:hover { text-decoration: underline; }
+
+    /* Séparateur */
+    .divider {
+      border: none;
+      border-top: 1px solid #162d4a;
+      margin: 1.25rem 0;
+    }
+    .divider-text {
+      text-align: center;
+      position: relative;
+      margin: 1.25rem 0;
+    }
+    .divider-text::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      height: 1px;
+      background: #162d4a;
+    }
+    .divider-text span {
+      position: relative;
+      background: #0c1a2e;
+      padding: 0 .75rem;
+      font-size: .78rem;
+      color: #4a7090;
+    }
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="login-logo"><i class="bi bi-activity"></i></div>
-    <div class="login-title">RaffineryWatch</div>
-    <div class="login-sub">Surveillance IoT Industrielle — Connexion</div>
+<div class="auth-wrapper">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <div class="logo-icon"><i class="bi bi-activity" style="color:#00e676"></i></div>
+    <span class="logo-name">RaffineryWatch</span>
+    <span class="logo-sub">Surveillance IoT Industrielle</span>
+  </div>
+
+  <!-- Card connexion -->
+  <div class="auth-card">
+    <div class="auth-card-title">
+      <i class="bi bi-box-arrow-in-right" style="color:#00e676"></i>
+      Connexion
+    </div>
 
     {% if form.errors %}
-    <div class="alert alert-danger py-2 small">
-      <i class="bi bi-exclamation-triangle me-1"></i>Identifiants incorrects.
+    <div class="error-msg">
+      <i class="bi bi-exclamation-triangle"></i>
+      Identifiant ou mot de passe incorrect.
     </div>
+    {% endif %}
+
+    {% if messages %}
+      {% for msg in messages %}
+      <div class="error-msg" style="background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.2);color:#69f0ae">
+        <i class="bi bi-check-circle"></i>{{ msg }}
+      </div>
+      {% endfor %}
     {% endif %}
 
     <form method="POST">
       {% csrf_token %}
-      <div class="mb-3">
-        <label class="form-label">Nom d'utilisateur</label>
-        <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+      <div class="field">
+        <label>Identifiant</label>
+        <input type="text" name="username" placeholder="jean.dupont" required autofocus>
       </div>
-      <div class="mb-4">
-        <label class="form-label">Mot de passe</label>
-        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" name="password" placeholder="••••••••" required>
       </div>
-      <button type="submit" class="btn btn-login">
-        <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+      <button type="submit" class="btn-primary-auth">
+        <i class="bi bi-box-arrow-in-right"></i> Se connecter
       </button>
     </form>
+
+    <div class="divider-text"><span>Pas encore de compte ?</span></div>
+
+    <div class="auth-switch">
+      <a href="{% url 'inscription' %}">
+        <i class="bi bi-person-plus me-1"></i>Créer un compte
+      </a>
+    </div>
   </div>
+
+</div>
 </body>
 </html>
